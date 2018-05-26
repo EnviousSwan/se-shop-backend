@@ -2,6 +2,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.rtfmarket.http.MainRoute
+import slick.jdbc.H2Profile
 import slick.jdbc.H2Profile.api.Database
 
 object Main extends App {
@@ -9,7 +10,7 @@ object Main extends App {
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-  val db = Database.forConfig("mydb")
+  val db: H2Profile.backend.Database = Database.forConfig("mydb")
 
   Http().bindAndHandle(MainRoute.route, "localhost", 8080)
 

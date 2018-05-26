@@ -1,7 +1,7 @@
+resolvers += Resolver.bintrayRepo("evolutiongaming", "maven")
+
 name := "se-shop-backend"
-
 version := "0.1"
-
 scalaVersion := "2.12.6"
 
 libraryDependencies ++= Seq(
@@ -14,5 +14,8 @@ libraryDependencies ++= Seq(
   "org.scalactic" %% "scalactic" % "3.0.5",
   "org.scalatest" %% "scalatest" % "3.0.5" % Test,
   "org.mockito" % "mockito-core" % "2.18.3" % Test,
-  "org.slf4j" % "slf4j-nop" % "1.6.4"
+  "org.slf4j" % "slf4j-nop" % "1.6.4",
+  "com.evolutiongaming" %% "scala-tools" % "2.1",
+  "com.evolutiongaming" %% "play-json-tools" % "0.1.1",
+  "com.evolutiongaming" %% "akka-http-play-json" % "0.1.10"
 )
