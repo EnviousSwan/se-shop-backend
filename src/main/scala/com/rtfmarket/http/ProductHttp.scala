@@ -18,11 +18,11 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
         parameters('sort.?, 'order.?, "filter[]".?) { (sort, order, filters) =>
           get {
             onComplete(productService.category(id).future) {
-              case Success(Right(category)) =>
+              case Success(Right(_))      =>
                 complete(StatusCodes.OK)
-              case Success(Left(message))   =>
+              case Success(Left(message)) =>
                 complete(Error(StatusCodes.NotFound, message).toResponse)
-              case _                        =>
+              case _                      =>
                 complete(StatusCodes.InternalServerError)
             }
           }
@@ -30,13 +30,29 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
       } ~
       path("details" / Segment) { slug =>
         get {
-          complete(StatusCodes.OK)
+          onComplete(productService.productDetails(slug).future) {
+            case Success(Right(_))      =>
+              complete(StatusCodes.OK)
+            case Success(Left(message)) =>
+              complete(Error(StatusCodes.NotFound, message).toResponse)
+            case _                      =>
+              complete(StatusCodes.InternalServerError)
+          }
         }
       } ~
       path(Segment) { slug =>
         get {
-          complete(StatusCodes.OK)
+          onComplete(productService.product(slug).future) {
+            case Success(Right(_)) =>
+              complete(StatusCodes.OK)
+            case Success(Left(message)) =>
+              complete(Error(StatusCodes.NotFound, message).toResponse)
+            case _ =>
+              complete(StatusCodes.InternalServerError)
+          }
         }
       }
     }
 }
+
+object ProductHttp

@@ -19,7 +19,6 @@ case class ProductRow(
   def properties: String = ???
   def inCart(userId: UserId): Future[Boolean] = ???
   def favourite(userId: UserId): Future[Boolean] = ???
-
 }
 
 final class Products(tag: Tag) extends Table[ProductRow](tag, "Product") {
