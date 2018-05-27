@@ -1,16 +1,27 @@
 package com.rtfmarket.services
 
-import com.rtfmarket.slick.UserId
+import com.evolutiongaming.util.Validation.FV
+import com.rtfmarket.slick.{UserId, UserRow}
+
+import scala.concurrent.Future
 
 trait UserService {
 
-  def createUser: Int
+  def createUser(userRow: UserRow): FV[Unit]
 
-  def loginUser(email: String, password: String): Int
+  def userExists(email: String): Future[Boolean]
 
-  def logoutUser(email: String): Int
+  def userExists(id: UserId): Future[Boolean]
 
-  def deleteUser(userId: UserId): Int
+  def loginUser(email: String, password: String): FV[Unit]
 
-  def updateUser: Int
+  def logoutUser(email: String): FV[Unit]
+
+  def user(email: String): FV[UserRow]
+
+  def user(id: UserId): FV[UserRow]
+
+  def deleteUser(userId: UserId): FV[Unit]
+
+  def updateUser(userRow: UserRow): FV[Unit]
 }

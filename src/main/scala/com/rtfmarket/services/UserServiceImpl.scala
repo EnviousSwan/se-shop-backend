@@ -1,29 +1,31 @@
 package com.rtfmarket.services
-import com.evolutiongaming.util.FutureEither
-import com.evolutiongaming.util.Validation._
-import com.rtfmarket.slick.{Database, UserId, Users}
+import com.evolutiongaming.util.Validation.{FV, _}
+import com.rtfmarket.slick.{Database, UserId, UserRow}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class UserServiceImpl(db: Database)
   (implicit executionContext: ExecutionContext) extends UserService {
 
-  override def createUser: Int = ???
+  def createUser(userRow: UserRow): FV[Unit] = ???
 
-  override def loginUser(email: String, password: String): Int = ???
+  def loginUser(email: String, password: String): FV[Unit] = ???
 
-  override def logoutUser(email: String): Int = ???
+  def userExists(email: String): Future[Boolean] = ???
 
-  override def deleteUser(userId: UserId): Int = ???
+  def userExists(id: UserId): Future[Boolean] = ???
 
-  override def updateUser: Int = ???
+  def user(id: UserId): FV[UserRow] = ???
+
+  def logoutUser(email: String): FV[Unit] = ???
+
+  def user(email: String): FV[UserRow] = ???
+
+  def deleteUser(userId: UserId): FV[Unit] = ???
+
+  def updateUser(userRow: UserRow): FV[Unit] = ???
 
   private def validatePhone(phone: String): FV[Unit] = ().ok.fe[String]
 
-  private def validateEmail(email: String): FV[Unit] = FutureEither {
-    db run Users.userByEmail(email) map {
-      case None => ().ok
-      case Some(_) => "User with such email already exists".ko
-    }
-  }
+  private def validateEmail(email: String): FV[Unit] = ().ok.fe[String]
 }
