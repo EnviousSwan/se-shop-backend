@@ -4,6 +4,10 @@ import slick.jdbc.H2Profile.api._
 
 case class UserId(value: Long) extends AnyVal with MappedTo[Long]
 
+object UserId {
+  lazy val Default = UserId(0)
+}
+
 case class UserRow(
   id: UserId = UserId(0),
   email: String,

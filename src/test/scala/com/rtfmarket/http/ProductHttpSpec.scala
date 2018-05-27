@@ -62,12 +62,12 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
 
   "/products/slug" should {
     "respond with NotFound when no product with such slug exists" in new Scope {
-      when(productService.product(M.anyString())) thenReturn s"Invalid product slug $slug".ko.fe
+      when(productService.product(M.anyString())) thenReturn s"No product found for '$slug'".ko.fe
 
       Get(s"/products/$slug") ~> service.route ~> check {
         status shouldBe StatusCodes.NotFound
         contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(404, s"Invalid product slug $slug")
+        responseAs[Error] shouldBe Error(404, s"No product found for '$slug'")
       }
     }
 
