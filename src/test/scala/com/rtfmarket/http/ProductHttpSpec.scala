@@ -5,6 +5,7 @@ import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.evolutiongaming.util.Validation._
 import com.rtfmarket.http.Error.ErrorResponseFormat
+import com.rtfmarket.http.ProductHttp.{Category, Product, ProductDetails}
 import com.rtfmarket.services.ProductService
 import com.rtfmarket.slick._
 import org.mockito.Mockito._
@@ -30,6 +31,8 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
 
       Get(s"/products/category/${clothes.slug}") ~> service.route ~> check {
         status shouldBe StatusCodes.OK
+        contentType shouldBe ContentTypes.`application/json`
+        responseAs[Response] shouldBe Response(Category(clothes))
       }
     }
   }
@@ -47,10 +50,12 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
     }
 
     "respond with OK when product slug is correct" in new Scope {
-      when(productService.productDetails(slug)) thenReturn ProductDetailsRow("cool", "stuf").ok.fe[String]
+      when(productService.productDetails(slug)) thenReturn details.ok.fe[String]
 
       Get(s"/products/$slug/details") ~> service.route ~> check {
         status shouldBe StatusCodes.OK
+        contentType shouldBe ContentTypes.`application/json`
+        responseAs[Response] shouldBe Response(ProductDetails(details))
       }
     }
   }
@@ -71,6 +76,8 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
 
       Get(s"/products/$slug") ~> service.route ~> check {
         status shouldBe StatusCodes.OK
+        contentType shouldBe ContentTypes.`application/json`
+        responseAs[Response] shouldBe Response(Product(sweater))
       }
     }
   }
@@ -79,8 +86,16 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
     val slug = "sweater"
     val id = 42
 
+    val clothes = CategoryRow(
+      id = CategoryId.Default,
+      name = "clothes",
+      slug = "stuff",
+      title = "amazing",
+      description = "not kidding"
+    )
+
     val sweater = ProductRow(
-      id = ProductId(0),
+      id = ProductId.Default,
       name = "Gucci",
       title = "sweater",
       description = "nice and warm",
@@ -89,13 +104,7 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
       price = 100500
     )
 
-    val clothes = CategoryRow(
-      id = CategoryId(0),
-      name = "clothes",
-      slug = "stuff",
-      title = "amazing",
-      description = "not kidding"
-    )
+    val details = ProductDetailsRow("cool", "stuff")
 
     val productService = mock[ProductService]
     val service = new ProductHttp(productService)
