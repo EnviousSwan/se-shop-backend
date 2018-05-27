@@ -5,7 +5,7 @@ import slick.jdbc.H2Profile.api._
 case class CartId(value: Long) extends AnyVal with MappedTo[Long]
 
 object CartId {
-  val Default = CartId(0)
+  val Test = CartId(0)
 }
 
 case class CartRow(id: CartId, userId: UserId)

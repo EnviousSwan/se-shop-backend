@@ -6,7 +6,7 @@ import akka.http.scaladsl.server.Route
 import com.rtfmarket.http.CartHttp.Cart
 import com.rtfmarket.http.ProductHttp.Product
 import com.rtfmarket.services.{CartService, ProductService}
-import com.rtfmarket.slick.UserId
+import com.rtfmarket.slick.{CartRow, UserId}
 import play.api.libs.json.{Json, OFormat}
 
 import scala.concurrent.ExecutionContext
@@ -19,19 +19,26 @@ class CartHttp(cartService: CartService, productService: ProductService)
     pathPrefix("cart") {
       pathEndOrSingleSlash {
         get {
-          complete(Response(Cart()).toResponse)
+          onComplete(cartService.cart(UserId.Test).future) {
+            case Success(Right(cart)) =>
+              complete(Just(Cart(cart)).toResponse)
+            case Success(Left(message)) =>
+              complete(Error(StatusCodes.NotFound, message).toResponse)
+            case _ =>
+              complete(StatusCodes.InternalServerError)
+          }
         }
       } ~
       path("product" / Segment) { slug =>
         post {
           val result = for {
             product <- productService.product(slug)
-            _ <- cartService.addProduct(UserId.Default, product)
+            _ <- cartService.addProduct(UserId.Test, product)
           } yield ()
 
           onComplete(result.future) {
             case Success(Right(_)) =>
-              complete(StatusCodes.OK)
+              complete(Just(StatusCodes.OK).toResponse)
             case Success(Left(message)) =>
               complete(Error(StatusCodes.NotFound, message).toResponse)
             case _ =>
@@ -39,37 +46,45 @@ class CartHttp(cartService: CartService, productService: ProductService)
           }
         } ~
         delete {
-          val result = for {
-            product <- productService.product(slug)
-            _ <- cartService.removeProduct(UserId.Default, product.id)
-          } yield ()
-
-          onComplete(result.future) {
-            case Success(Right(_)) =>
-              complete(StatusCodes.OK)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.NotFound, message).toResponse)
-            case _ =>
-              complete(StatusCodes.InternalServerError)
-          }
+          handleProductRemoval(slug)
         } ~
-        put {
-          val result = for {
-            product <- productService.product(slug)
-            _ <- cartService.changeProductQuantity(UserId.Default, product.id, 2)
-          } yield ()
+        (put & parameters('count.as[Int])) { count =>
+          if (count == 0)
+            handleProductRemoval(slug)
+          else {
+            val result = for {
+              product <- productService.product(slug)
+              _ <- cartService.changeProductQuantity(UserId.Test, product.id, 2)
+            } yield ()
 
-          onComplete(result.future) {
-            case Success(Right(_)) =>
-              complete(StatusCodes.OK)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.NotFound, message).toResponse)
-            case _ =>
-              complete(StatusCodes.InternalServerError)
+            onComplete(result.future) {
+              case Success(Right(_))      =>
+                complete(Just(StatusCodes.OK).toResponse)
+              case Success(Left(message)) =>
+                complete(Error(StatusCodes.NotFound, message).toResponse)
+              case _                      =>
+                complete(StatusCodes.InternalServerError)
+            }
           }
         }
       }
     }
+
+  private def handleProductRemoval(slug: String): Route = {
+    val result = for {
+      product <- productService.product(slug)
+      _ <- cartService.removeProduct(UserId.Test, product.id)
+    } yield ()
+
+    onComplete(result.future) {
+      case Success(Right(_))      =>
+        complete(Just(StatusCodes.OK).toResponse)
+      case Success(Left(message)) =>
+        complete(Error(StatusCodes.NotFound, message).toResponse)
+      case _                      =>
+        complete(StatusCodes.InternalServerError)
+    }
+  }
 }
 
 object CartHttp {
@@ -77,6 +92,10 @@ object CartHttp {
   case class CartItem(count: Int = 1, products: List[Product] = List(Product()))
 
   case class Cart(cartItems: List[CartItem] = List(CartItem())) extends Data[Cart]
+
+  object Cart {
+    def apply(cartRow: CartRow): Cart = Cart()
+  }
 
   implicit val CartItemFormat: OFormat[CartItem] = Json.format[CartItem]
   implicit val CartFormat: OFormat[Cart] = Json.format[Cart]

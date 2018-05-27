@@ -21,7 +21,7 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
           get {
             onComplete(productService.category(slug).future) {
               case Success(Right(category)) =>
-                complete(Response(Category(category)).toResponse)
+                complete(Just(Category(category)).toResponse)
               case Success(Left(message))   =>
                 complete(Error(StatusCodes.NotFound, message).toResponse)
               case _                        =>
@@ -34,7 +34,7 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
         get {
           onComplete(productService.productDetails(slug).future) {
             case Success(Right(details)) =>
-              complete(Response(ProductDetails(details)).toResponse)
+              complete(Just(ProductDetails(details)).toResponse)
             case Success(Left(message))  =>
               complete(Error(StatusCodes.NotFound, message).toResponse)
             case _                       =>
@@ -46,7 +46,7 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
         get {
           onComplete(productService.product(slug).future) {
             case Success(Right(product)) =>
-              complete(Response(Product(product)).toResponse)
+              complete(Just(Product(product)).toResponse)
             case Success(Left(message)) =>
               complete(Error(StatusCodes.NotFound, message).toResponse)
             case _ =>
@@ -65,7 +65,10 @@ object ProductHttp {
     main: String = "http://via.placeholder.com/300",
     fallback: String = "http://via.placeholder.com/300")
 
-  case class ProductProperty(id: Long = 0, name: String = "name", title: String = "title")
+  case class ProductProperty(
+    id: Long = 0,
+    name: String = "name",
+    title: String = "title")
 
   case class Filter(
     id: Long = 0,
@@ -73,10 +76,12 @@ object ProductHttp {
     title: String = "title",
     description: String = "description",
     multiple: Boolean = false,
-    options: List[FilterOption] = List(FilterOption())
-  )
+    options: List[FilterOption] = List(FilterOption()))
 
-  case class FilterOption(id: Long = 0, name: String = "name", title: String = "title")
+  case class FilterOption(
+    id: Long = 0,
+    name: String = "name",
+    title: String = "title")
 
   case class Product(
     id: ProductId = ProductId.Default,
@@ -121,8 +126,7 @@ object ProductHttp {
   case class ProductDetailsPropertyOption(
     id: Long = 0,
     name: String = "name",
-    title: String = "title"
-  )
+    title: String = "title")
 
   case class ProductDetailsProperty(
     id: Long = 0,
@@ -130,15 +134,13 @@ object ProductHttp {
     title: String = "title",
     description: String = "description",
     multiple: Boolean = false,
-    options: List[ProductDetailsPropertyOption] = List(ProductDetailsPropertyOption())
-  )
+    options: List[ProductDetailsPropertyOption] = List(ProductDetailsPropertyOption()))
 
   case class ProductReview(
     name: String = "name",
     media: Media = Media(),
     rating: Double = 4.0,
-    content: String = "content"
-  )
+    content: String = "content")
 
   case class ProductDetails(
     about: String = "about",

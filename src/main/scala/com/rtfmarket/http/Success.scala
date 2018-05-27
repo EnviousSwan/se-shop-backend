@@ -8,16 +8,21 @@ trait Data[T] { self: T =>
   def toJson(implicit writes: Writes[T]): JsValue = Json.toJson(self)
 }
 
-case class Response(status: Int, data: JsValue) {
-  def toResponse: HttpResponse = HttpResponse(
-    status = status,
-    entity = HttpEntity(`application/json`, Json.prettyPrint(Json.toJson(this)))
-  )
+case class Just(status: Int, data: Option[JsValue]) {
+  def toResponse: HttpResponse = {
+    HttpResponse(
+      status = status,
+      entity = HttpEntity(`application/json`, Json.prettyPrint(Json.toJson(this)))
+    )
+  }
 }
 
-object Response {
-  def apply[T](data: Data[T], statusCode: StatusCode = StatusCodes.OK)(implicit writes: Writes[T]): Response =
-    Response(statusCode.intValue, data.toJson)
+object Just {
+  def apply[T](data: Data[T], statusCode: StatusCode = StatusCodes.OK)(implicit writes: Writes[T]): Just = {
+    Just(statusCode.intValue, Some(data.toJson))
+  }
 
-  implicit val ResponseFormat: OFormat[Response] = Json.format[Response]
+  def apply(statusCode: StatusCode): Just = Just(statusCode.intValue, None)
+
+  implicit val ResponseFormat: OFormat[Just] = Json.format[Just]
 }

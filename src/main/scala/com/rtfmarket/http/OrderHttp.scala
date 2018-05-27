@@ -17,7 +17,7 @@ class OrderHttp(orderService: OrderService) {
     pathPrefix("orders") {
       pathEndOrSingleSlash {
         (post & entity(as[OrderRow])) { order =>
-          onComplete(orderService.placeOrder(UserId.Default, order).future) {
+          onComplete(orderService.placeOrder(UserId.Test, order).future) {
             case Success(Right(_))      =>
               complete(StatusCodes.OK)
             case Success(Left(message)) =>
@@ -27,7 +27,7 @@ class OrderHttp(orderService: OrderService) {
           }
         } ~
         get {
-          onComplete(orderService.orders(UserId.Default).future) {
+          onComplete(orderService.orders(UserId.Test).future) {
             case Success(Right(_)) =>
               complete(StatusCodes.OK)
             case Success(Left(message)) =>

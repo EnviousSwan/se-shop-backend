@@ -12,20 +12,18 @@ import org.scalatest.mockito.MockitoSugar
 import com.evolutiongaming.util.Validation._
 import OrderHttp._
 
-class OrderHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with MockitoSugar {
+class OrderHttpSpec extends HttpSpec {
   "/orders" should {
     "respond with BadRequest on invalid order" in new Scope {
       when(orderService.placeOrder(UserId(M.anyLong()), M.any())) thenReturn "Invalid order".ko.fe
 
       Post("/orders", badOrder) ~> service.route ~> check {
-        status shouldBe StatusCodes.BadRequest
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(StatusCodes.BadRequest, "Invalid order")
+        checkForError(StatusCodes.BadRequest, "Invalid order")
       }
     }
 
     "place new order on POST" in new Scope {
-      when(orderService.placeOrder(UserId.Default, order)) thenReturn ().ok.fe[String]
+      when(orderService.placeOrder(UserId.Test, order)) thenReturn ().ok.fe[String]
 
       Post("/orders", order) ~> service.route ~> check {
         status shouldBe StatusCodes.OK
@@ -36,14 +34,12 @@ class OrderHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with 
       when(orderService.orders(UserId(M.anyLong()))) thenReturn "Invalid request".ko.fe
 
       Get("/orders") ~> service.route ~> check {
-        status shouldBe StatusCodes.BadRequest
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(StatusCodes.BadRequest, "Invalid request")
+        checkForError(StatusCodes.BadRequest, "Invalid request")
       }
     }
 
     "get orders list" in new Scope {
-      when(orderService.orders(UserId.Default)) thenReturn List.empty.ok.fe[String]
+      when(orderService.orders(UserId.Test)) thenReturn List.empty.ok.fe[String]
 
       Get("/orders") ~> service.route ~> check {
         status shouldBe StatusCodes.OK
@@ -56,9 +52,7 @@ class OrderHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with 
       when(orderService.order(OrderId(M.anyLong))) thenReturn "No order with such id exists".ko.fe
 
       Get(s"/orders/1") ~> service.route ~> check {
-        status shouldBe StatusCodes.NotFound
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(StatusCodes.NotFound, "No order with such id exists")
+        checkForError(StatusCodes.NotFound, "No order with such id exists")
       }
     }
 
@@ -92,7 +86,7 @@ class OrderHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with 
     val orderId = OrderId(42)
     val deliveryId = 100
 
-    val order = OrderRow(OrderId.Default, UserId.Default, CartId.Default)
+    val order = OrderRow(OrderId.Default, UserId.Test, CartId.Test)
     val badOrder = OrderRow(OrderId(1), UserId(1), CartId(1))
 
     val orderService: OrderService = mock[OrderService]

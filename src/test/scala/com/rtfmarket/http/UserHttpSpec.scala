@@ -10,8 +10,9 @@ import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import UserHttp.{LoginRequest, userFormat}
+import org.mockito.{ArgumentMatchers => M}
 
-class UserHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with MockitoSugar {
+class UserHttpSpec extends HttpSpec {
 
   "/user" should {
     "respond with OK for stub" in new Scope {
@@ -23,12 +24,10 @@ class UserHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with M
     }
 
     "respond with BadRequest if user with such email already exists" in new Scope {
-      when(userService.createUser(user)) thenReturn s"User with email ${user.email} already exists".ko.fe
+      when(userService.createUser(M.any())) thenReturn s"User already exists".ko.fe
 
       Post("/user", user) ~> service.route ~> check {
-        status shouldBe StatusCodes.BadRequest
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(400, s"User with email ${user.email} already exists")
+        checkForError(StatusCodes.BadRequest, "User already exists")
       }
     }
   }
@@ -38,9 +37,7 @@ class UserHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with M
       when(userService.userExists(email)) thenReturn false.future
 
       Post("/user/login", loginRequest) ~> service.route ~> check {
-        status shouldBe StatusCodes.NotFound
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(404, s"No user found with email $email")
+        checkForError(StatusCodes.NotFound, s"No user found with email $email")
       }
     }
 
@@ -49,9 +46,7 @@ class UserHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with M
       when(userService.loginUser(email, password)) thenReturn "Incorrect password".ko.fe
 
       Post("/user/login", loginRequest) ~> service.route ~> check {
-        status shouldBe StatusCodes.BadRequest
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(400, "Incorrect password")
+        checkForError(StatusCodes.BadRequest, "Incorrect password")
       }
     }
 
@@ -79,9 +74,7 @@ class UserHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with M
       when(userService.userExists(id)) thenReturn false.future
 
       Get(s"/user/${id.value}", loginRequest) ~> service.route ~> check {
-        status shouldBe StatusCodes.NotFound
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(404, s"No user found with id $id")
+        checkForError(StatusCodes.NotFound, s"No user found with id $id")
       }
     }
 
@@ -98,20 +91,16 @@ class UserHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with M
       when(userService.userExists(id)) thenReturn false.future
 
       Put(s"/user/${id.value}", user) ~> service.route ~> check {
-        status shouldBe StatusCodes.NotFound
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(404, s"No user found with id $id")
+        checkForError(StatusCodes.NotFound, s"No user found with id $id")
       }
     }
 
     "respond with BadRequest when trying to update user incorrectly" in new Scope {
       when(userService.userExists(id)) thenReturn true.future
-      when(userService.updateUser(user)) thenReturn s"User with email $email already exists".ko.fe
+      when(userService.updateUser(user)) thenReturn s"User already exists".ko.fe
 
       Put(s"/user/${id.value}", user) ~> service.route ~> check {
-        status shouldBe StatusCodes.BadRequest
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(400, s"User with email $email already exists")
+        checkForError(StatusCodes.BadRequest, "User already exists")
       }
     }
 

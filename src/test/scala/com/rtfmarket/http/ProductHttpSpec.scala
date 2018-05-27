@@ -1,28 +1,21 @@
 package com.rtfmarket.http
 
-import akka.http.scaladsl.marshallers.playjson.PlayJsonSupport._
-import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.model.StatusCodes
 import com.evolutiongaming.util.Validation._
-import com.rtfmarket.http.Error.ErrorResponseFormat
 import com.rtfmarket.http.ProductHttp.{Category, Product, ProductDetails}
 import com.rtfmarket.services.ProductService
 import com.rtfmarket.slick._
 import org.mockito.Mockito._
 import org.mockito.{ArgumentMatchers => M}
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
 
-class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with MockitoSugar {
+class ProductHttpSpec extends HttpSpec {
 
   "/products/category/id" should {
     "respond with NotFound no when such category exists" in new Scope {
-      when(productService.category(M.anyString())) thenReturn s"Category $id not found".ko.fe
+      when(productService.category(M.anyString())) thenReturn s"Category not found".ko.fe
 
-      Get(s"/products/category/$id") ~> service.route ~> check {
-        status shouldBe StatusCodes.NotFound
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(404, s"Category $id not found")
+      Get(s"/products/category/id") ~> service.route ~> check {
+        checkForError(StatusCodes.NotFound, "Category not found")
       }
     }
 
@@ -30,9 +23,7 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
       when(productService.category(clothes.slug)) thenReturn clothes.ok.fe[String]
 
       Get(s"/products/category/${clothes.slug}") ~> service.route ~> check {
-        status shouldBe StatusCodes.OK
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Response] shouldBe Response(Category(clothes))
+        checkForSuccess(Just(Category(clothes)))
       }
     }
   }
@@ -40,12 +31,10 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
   "/products/slug/details" should {
 
     "respond with NotFound when no product details with such slug exists" in new Scope {
-      when(productService.productDetails(M.anyString())) thenReturn s"No product details found for $slug".ko.fe
+      when(productService.productDetails(M.anyString())) thenReturn s"No product details found".ko.fe
 
-      Get(s"/products/$slug/details") ~> service.route ~> check {
-        status shouldBe StatusCodes.NotFound
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(404, s"No product details found for $slug")
+      Get(s"/products/slug/details") ~> service.route ~> check {
+        checkForError(StatusCodes.NotFound, "No product details found")
       }
     }
 
@@ -53,21 +42,17 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
       when(productService.productDetails(slug)) thenReturn details.ok.fe[String]
 
       Get(s"/products/$slug/details") ~> service.route ~> check {
-        status shouldBe StatusCodes.OK
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Response] shouldBe Response(ProductDetails(details))
+        checkForSuccess(Just(ProductDetails(details)))
       }
     }
   }
 
   "/products/slug" should {
     "respond with NotFound when no product with such slug exists" in new Scope {
-      when(productService.product(M.anyString())) thenReturn s"No product found for '$slug'".ko.fe
+      when(productService.product(M.anyString())) thenReturn s"No product found".ko.fe
 
-      Get(s"/products/$slug") ~> service.route ~> check {
-        status shouldBe StatusCodes.NotFound
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(404, s"No product found for '$slug'")
+      Get(s"/products/slug") ~> service.route ~> check {
+        checkForError(StatusCodes.NotFound, "No product found")
       }
     }
 
@@ -75,9 +60,7 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
       when(productService.product(slug)) thenReturn sweater.ok.fe[String]
 
       Get(s"/products/$slug") ~> service.route ~> check {
-        status shouldBe StatusCodes.OK
-        contentType shouldBe ContentTypes.`application/json`
-        responseAs[Response] shouldBe Response(Product(sweater))
+        checkForSuccess(Just(Product(sweater)))
       }
     }
   }
