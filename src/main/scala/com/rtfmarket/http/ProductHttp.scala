@@ -3,11 +3,11 @@ package com.rtfmarket.http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import com.rtfmarket.http.IdMatchers._
+import com.rtfmarket.http.ProductHttp._
 import com.rtfmarket.services.ProductService
 import com.rtfmarket.slick.{CategoryId, CategoryRow, ProductId}
-import play.api.libs.json.{Json, OFormat}
-import ProductHttp._
+import play.api.libs.json.{Json, OFormat, Writes}
+import ProductHttp.CategoryFormat
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
@@ -19,9 +19,11 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
       path("category" / Segment) { slug =>
         parameters('sort.?, 'order.?, "filter[]".?) { (sort, order, filters) =>
           get {
+
+
             onComplete(productService.category(slug).future) {
               case Success(Right(category))      =>
-                complete(Response(Json toJson Category(category)).toResponse)
+                complete(Response(Category(category)).toResponse)
               case Success(Left(message)) =>
                 complete(Error(StatusCodes.NotFound, message).toResponse)
               case _                      =>
@@ -30,7 +32,7 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
           }
         }
       } ~
-      path("details" / Segment) { slug =>
+      path(Segment / "details") { slug =>
         get {
           onComplete(productService.productDetails(slug).future) {
             case Success(Right(_))      =>
@@ -58,6 +60,8 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
 }
 
 object ProductHttp {
+
+  import IdFormats._
 
   case class Media(
     main: String = "http://via.placeholder.com/300",
@@ -98,19 +102,17 @@ object ProductHttp {
     description: String = "description",
     products: List[Product] = List(Product()),
     filters: List[Filter] = List(Filter())
-  )
+  ) extends Data[Category]
 
   object Category {
-    def apply(row: CategoryRow): Category =
+    def apply(row: CategoryRow)(implicit writes: Writes[Category]): Category =
       Category(row.id, row.name, row.slug, row.title)
   }
 
-  import IdFormats._
-
-  implicit val MediaWrites: OFormat[Media] = Json.format[Media]
-  implicit val PropertyWrites: OFormat[Property] = Json.format[Property]
-  implicit val FilterOptionWrites: OFormat[FilterOption] = Json.format[FilterOption]
-  implicit val FilterWrite: OFormat[Filter] = Json.format[Filter]
-  implicit val ProductWrites: OFormat[Product] = Json.format[Product]
-  implicit val CategoryWrites: OFormat[Category] = Json.format[Category]
+  implicit val MediaFormat: OFormat[Media] = Json.format[Media]
+  implicit val PropertyFormat: OFormat[Property] = Json.format[Property]
+  implicit val FilterOptionFormat: OFormat[FilterOption] = Json.format[FilterOption]
+  implicit val FilterFormat: OFormat[Filter] = Json.format[Filter]
+  implicit val ProductFormat: OFormat[Product] = Json.format[Product]
+  implicit val CategoryFormat: OFormat[Category] = Json.format[Category]
 }

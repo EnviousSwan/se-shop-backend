@@ -16,7 +16,7 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
 
   "/products/category/id" should {
     "respond with NotFound no when such category exists" in new Scope {
-      when(productService.category(CategoryId(M.any()))) thenReturn s"Category $id not found".ko.fe
+      when(productService.category(M.anyString())) thenReturn s"Category $id not found".ko.fe
 
       Get(s"/products/category/$id") ~> service.route ~> check {
         status shouldBe StatusCodes.NotFound
@@ -26,20 +26,20 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
     }
 
     "respond with OK when category with such id exists" in new Scope {
-      when(productService.category(clothes.id)) thenReturn clothes.ok.fe[String]
+      when(productService.category(clothes.slug)) thenReturn clothes.ok.fe[String]
 
-      Get(s"/products/category/${clothes.id.value}") ~> service.route ~> check {
+      Get(s"/products/category/${clothes.slug}") ~> service.route ~> check {
         status shouldBe StatusCodes.OK
       }
     }
   }
 
-  "/products/details/slug" should {
+  "/products/slug/details" should {
 
     "respond with NotFound when no product details with such slug exists" in new Scope {
       when(productService.productDetails(M.anyString())) thenReturn s"No product details found for $slug".ko.fe
 
-      Get(s"/products/details/$slug") ~> service.route ~> check {
+      Get(s"/products/$slug/details") ~> service.route ~> check {
         status shouldBe StatusCodes.NotFound
         contentType shouldBe ContentTypes.`application/json`
         responseAs[Error] shouldBe Error(404, s"No product details found for $slug")
@@ -49,7 +49,7 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
     "respond with OK when product slug is correct" in new Scope {
       when(productService.productDetails(slug)) thenReturn ProductDetailsRow("cool", "stuf").ok.fe[String]
 
-      Get(s"/products/details/$slug") ~> service.route ~> check {
+      Get(s"/products/$slug/details") ~> service.route ~> check {
         status shouldBe StatusCodes.OK
       }
     }
@@ -92,7 +92,7 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
     val clothes = CategoryRow(
       id = CategoryId(0),
       name = "clothes",
-      slug = "some stuff",
+      slug = "stuff",
       title = "amazing",
       description = "not kidding"
     )

@@ -104,19 +104,22 @@ class UserHttpSpec extends WordSpec with Matchers with ScalatestRouteTest with M
       }
     }
 
-    "respond with BadRequest when trying user incorrectly" in new Scope {
-      when(userService.userExists(email)) thenReturn true.future
-      when(userService.loginUser(email, password)) thenReturn s"User with email $email exists".ko.fe
+    "respond with BadRequest when trying to update user incorrectly" in new Scope {
+      when(userService.userExists(id)) thenReturn true.future
+      when(userService.updateUser(user)) thenReturn s"User with email $email already exists".ko.fe
 
       Put(s"/user/${id.value}", user) ~> service.route ~> check {
         status shouldBe StatusCodes.BadRequest
         contentType shouldBe ContentTypes.`application/json`
-        responseAs[Error] shouldBe Error(404, s"User with email $email already exists")
+        responseAs[Error] shouldBe Error(400, s"User with email $email already exists")
       }
     }
 
     "respond with OK for put stub" in new Scope {
-      Put(s"/user/${id.value}") ~> service.route ~> check {
+      when(userService.userExists(id)) thenReturn true.future
+      when(userService.updateUser(user)) thenReturn ().ok.fe[String]
+
+      Put(s"/user/${id.value}", user) ~> service.route ~> check {
         status shouldBe StatusCodes.OK
       }
     }

@@ -2,10 +2,11 @@ package com.rtfmarket.http
 
 import akka.http.scaladsl.model.ContentTypes.`application/json`
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCode, StatusCodes}
-import Response.ResponseFormat
 import play.api.libs.json._
 
-trait Data
+trait Data[T] { self: T =>
+  def toJson(implicit writes: Writes[T]): JsValue = Json.toJson(self)
+}
 
 case class Response(status: Int, data: JsValue) {
   def toResponse: HttpResponse = HttpResponse(
@@ -15,8 +16,8 @@ case class Response(status: Int, data: JsValue) {
 }
 
 object Response {
-  def apply(data: JsValue, statusCode: StatusCode = StatusCodes.OK): Response =
-    Response(statusCode.intValue, data)
+  def apply[T](data: Data[T], statusCode: StatusCode = StatusCodes.OK)(implicit writes: Writes[T]): Response =
+    Response(statusCode.intValue, data.toJson)
 
   implicit val ResponseFormat: OFormat[Response] = Json.format[Response]
 }
