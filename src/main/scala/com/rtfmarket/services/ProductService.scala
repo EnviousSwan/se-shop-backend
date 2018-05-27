@@ -7,6 +7,8 @@ trait ProductService {
 
   def category(categoryId: CategoryId): FV[CategoryRow]
 
+  def category(slug: String): FV[CategoryRow]
+
   def productDetails(slug: String): FV[ProductDetailsRow]
 
   def product(slug: String): FV[ProductRow]

@@ -4,6 +4,10 @@ import slick.jdbc.H2Profile.api._
 
 case class CategoryId(value: Long) extends MappedTo[Long]
 
+object CategoryId {
+  lazy val Default = CategoryId(0)
+}
+
 case class CategoryRow(
   id: CategoryId,
   name: String,

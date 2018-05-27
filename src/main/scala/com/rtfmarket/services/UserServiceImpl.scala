@@ -15,9 +15,9 @@ class UserServiceImpl(db: Database)
 
   def userExists(id: UserId): Future[Boolean] = ???
 
-  def user(id: UserId): FV[UserRow] = ???
-
   def logoutUser(email: String): FV[Unit] = ???
+
+  def user(id: UserId): FV[UserRow] = ???
 
   def user(email: String): FV[UserRow] = ???
 

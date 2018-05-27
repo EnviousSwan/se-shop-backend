@@ -7,6 +7,10 @@ import scala.concurrent.Future
 
 case class ProductId(value: Long) extends AnyVal with MappedTo[Long]
 
+object ProductId {
+  lazy val Default = ProductId(0)
+}
+
 case class ProductRow(
   id: ProductId,
   name: String,

@@ -1,9 +1,10 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import com.rtfmarket.http.MainRoute
-import slick.jdbc.H2Profile
-import slick.jdbc.H2Profile.api.Database
+import com.rtfmarket.http.{MainRoute, ProductHttp}
+import com.rtfmarket.services.ProductServiceImpl
+import akka.http.scaladsl.server.Directives._
+import com.rtfmarket.slick.Database
 
 import scala.io.StdIn
 
@@ -11,16 +12,19 @@ object Main extends App {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
+  implicit val executionContext = system.dispatcher
 
-  implicit val ec = system.dispatcher
+  val db = Database.forConfig("rtfm")
+  val productService = new ProductServiceImpl(db)
+  val productHttp = new ProductHttp(productService)
 
-  val db: H2Profile.backend.Database = Database.forConfig("rtfm")
+  val route = MainRoute.route ~ productHttp.route
 
-  val bindingFuture = Http().bindAndHandle(MainRoute.route, "localhost", 8081)
+  val bindingFuture = Http().bindAndHandle(route, "localhost", 8081)
 
   println(s"Server online at http://localhost:8081/\nPress RETURN to stop...")
-  StdIn.readLine() // let it run until user presses return
+  StdIn.readLine()
   bindingFuture
-    .flatMap(_.unbind()) // trigger unbinding from the port
-    .onComplete(_ ⇒ system.terminate()) // and shutdown when done
+    .flatMap(_.unbind())
+    .onComplete(_ ⇒ system.terminate())
 }
