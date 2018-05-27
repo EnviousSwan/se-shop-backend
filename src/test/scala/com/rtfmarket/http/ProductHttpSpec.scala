@@ -106,7 +106,7 @@ class ProductHttpSpec extends WordSpec with Matchers with ScalatestRouteTest wit
 
     val details = ProductDetailsRow("cool", "stuff")
 
-    val productService = mock[ProductService]
+    val productService: ProductService = mock[ProductService]
     val service = new ProductHttp(productService)
   }
 }

@@ -4,6 +4,10 @@ import slick.jdbc.H2Profile.api._
 
 case class OrderId(value: Long) extends AnyVal with MappedTo[Long]
 
+object OrderId {
+  val Default = OrderId(0)
+}
+
 case class OrderRow(id: OrderId, userId: UserId, cartId: CartId)
 
 final class Orders(tag: Tag) extends Table[OrderRow](tag, "Order") {
