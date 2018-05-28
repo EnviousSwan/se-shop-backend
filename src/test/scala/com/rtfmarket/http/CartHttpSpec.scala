@@ -86,7 +86,7 @@ class CartHttpSpec extends HttpSpec {
     val slug = "slug"
 
     val sweater = ProductRow(
-      id = ProductId.Default,
+      id = ProductId.Test,
       name = "Gucci",
       title = "sweater",
       description = "nice and warm",
@@ -95,8 +95,8 @@ class CartHttpSpec extends HttpSpec {
       price = 100500
     )
 
-    val cartService = mock[CartService]
-    val productService = mock[ProductService]
+    val cartService: CartService = mock[CartService]
+    val productService: ProductService = mock[ProductService]
 
     val service = new CartHttp(cartService, productService)
   }

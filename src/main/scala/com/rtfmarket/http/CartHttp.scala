@@ -4,7 +4,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.rtfmarket.http.CartHttp.Cart
-import com.rtfmarket.http.ProductHttp.Product
+import com.rtfmarket.domain.Product
 import com.rtfmarket.services.{CartService, ProductService}
 import com.rtfmarket.slick.{CartRow, UserId}
 import play.api.libs.json.{Json, OFormat}
@@ -88,6 +88,8 @@ class CartHttp(cartService: CartService, productService: ProductService)
 }
 
 object CartHttp {
+
+  import com.rtfmarket.services.ProductServiceImpl.ProductFormat
 
   case class CartItem(count: Int = 1, products: List[Product] = List(Product()))
 

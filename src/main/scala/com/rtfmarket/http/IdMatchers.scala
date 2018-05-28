@@ -39,5 +39,6 @@ object IdFormats {
   implicit val OrderIdFormat: Format[OrderId] = jsonFormat(OrderId.apply, _.value)
   implicit val ProductIdFormat: Format[ProductId] = jsonFormat(ProductId.apply, _.value)
   implicit val CartIdFormat: Format[CartId] = jsonFormat(CartId.apply, _.value)
+  implicit val FilterIdFormat: Format[FilterId] = jsonFormat(FilterId.apply, _.value)
   implicit val CategoryIdFormat: Format[CategoryId] = jsonFormat(CategoryId.apply, _.value)
 }

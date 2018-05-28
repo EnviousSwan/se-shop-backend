@@ -2,13 +2,32 @@ package com.rtfmarket.http
 
 import akka.http.scaladsl.model.StatusCodes
 import com.evolutiongaming.util.Validation._
-import com.rtfmarket.http.ProductHttp.{Category, Product, ProductDetails}
+import com.rtfmarket.domain.{Category, Product, ProductDetails}
+import com.rtfmarket.services.ProductServiceImpl._
 import com.rtfmarket.services.ProductService
 import com.rtfmarket.slick._
 import org.mockito.Mockito._
 import org.mockito.{ArgumentMatchers => M}
 
 class ProductHttpSpec extends HttpSpec {
+
+  "/categories" should {
+    "respond with OK and categories list" in new Scope {
+      when(productService.categories()) thenReturn List(clothes).future
+
+      Get("/categories") ~> service.route ~> check {
+        checkForSuccess(Just(List(clothes)))
+      }
+    }
+
+    "respons with OK when categories list is empty" in new Scope {
+      when(productService.categories()) thenReturn List.empty.future
+
+      Get("/categories") ~> service.route ~> check {
+        checkForSuccess(Just(List.empty[Category]))
+      }
+    }
+  }
 
   "/products/category/id" should {
     "respond with NotFound no when such category exists" in new Scope {
@@ -23,7 +42,7 @@ class ProductHttpSpec extends HttpSpec {
       when(productService.category(clothes.slug)) thenReturn clothes.ok.fe[String]
 
       Get(s"/products/category/${clothes.slug}") ~> service.route ~> check {
-        checkForSuccess(Just(Category(clothes)))
+        checkForSuccess(Just(clothes))
       }
     }
   }
@@ -69,16 +88,18 @@ class ProductHttpSpec extends HttpSpec {
     val slug = "sweater"
     val id = 42
 
-    val clothes = CategoryRow(
-      id = CategoryId.Default,
-      name = "clothes",
-      slug = "stuff",
-      title = "amazing",
-      description = "not kidding"
+    val clothes = Category(
+      CategoryRow(
+        id = CategoryId.Test,
+        name = "clothes",
+        slug = "stuff",
+        title = "amazing",
+        description = "not kidding"
+      )
     )
 
     val sweater = ProductRow(
-      id = ProductId.Default,
+      id = ProductId.Test,
       name = "Gucci",
       title = "sweater",
       description = "nice and warm",

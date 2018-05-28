@@ -8,7 +8,7 @@ import scala.concurrent.Future
 case class ProductId(value: Long) extends AnyVal with MappedTo[Long]
 
 object ProductId {
-  lazy val Default = ProductId(0)
+  lazy val Test = ProductId(0)
 }
 
 case class ProductRow(
@@ -35,6 +35,12 @@ final class Products(tag: Tag) extends Table[ProductRow](tag, "Product") {
   def price = column[Double]("price")
 
   def * = (id, name, title, description, categoryId, media, price).mapTo[ProductRow]
+
+  def category = foreignKey("category_fk", categoryId, Categories)(_.id)
 }
 
-object Products extends TableQuery(new Products(_))
+object Products extends TableQuery(new Products(_)) {
+  lazy val byCategoryId = Compiled { categoryId: Rep[CategoryId] =>
+    filter(_.categoryId === categoryId)
+  }
+}

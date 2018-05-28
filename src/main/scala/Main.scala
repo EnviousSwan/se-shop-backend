@@ -4,6 +4,7 @@ import akka.stream.ActorMaterializer
 import com.rtfmarket.http.{MainRoute, ProductHttp}
 import com.rtfmarket.services.ProductServiceImpl
 import akka.http.scaladsl.server.Directives._
+import com.rtfmarket.services
 import com.rtfmarket.slick.Database
 
 import scala.io.StdIn
@@ -15,7 +16,9 @@ object Main extends App {
   implicit val executionContext = system.dispatcher
 
   val db = Database.forConfig("rtfm")
-  val productService = new ProductServiceImpl(db)
+
+  val productDb = new services.ProductServiceImpl.Db(db)
+  val productService = new ProductServiceImpl(productDb)
   val productHttp = new ProductHttp(productService)
 
   val route = MainRoute.route ~ productHttp.route

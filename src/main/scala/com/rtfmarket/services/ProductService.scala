@@ -1,11 +1,16 @@
 package com.rtfmarket.services
 
 import com.evolutiongaming.util.Validation.FV
+import com.rtfmarket.domain.Category
 import com.rtfmarket.slick.{CategoryId, CategoryRow, ProductDetailsRow, ProductRow}
+
+import scala.concurrent.Future
 
 trait ProductService {
 
-  def category(slug: String): FV[CategoryRow]
+  def categories(): Future[Seq[Category]]
+
+  def category(slug: String): FV[Category]
 
   def productDetails(slug: String): FV[ProductDetailsRow]
 

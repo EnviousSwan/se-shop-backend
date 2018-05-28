@@ -1,6 +1,8 @@
 package com.rtfmarket.slick
 
+import slick.dbio.Effect
 import slick.jdbc.H2Profile.api._
+import slick.sql.SqlAction
 
 case class UserId(value: Long) extends AnyVal with MappedTo[Long]
 
@@ -27,15 +29,14 @@ final class Users(tag: Tag) extends Table[UserRow](tag, "User") {
   def phone = column[Option[String]]("phone")
   def address = column[Option[String]]("address")
 
-  override def * =
-    (id, email, firstName, lastName, passwordSha, phone, address).mapTo[UserRow]
+  def * = (id, email, firstName, lastName, passwordSha, phone, address).mapTo[UserRow]
 }
 
 object Users extends TableQuery(new Users(_)) {
 
-  def userByEmail(email: String) = Users.filter(_.email === email).result.headOption
+  def userByEmail(email: String) = Users.filter(_.email === email)
 
-  def userByPhone(phone: String) = Users.filter(_.phone === phone).result.headOption
+  def userByPhone(phone: String) = Users.filter(_.phone === phone)
 
   def createUser(user: UserRow): DBIO[UserId] =
     Users returning Users.map(_.id) += user
