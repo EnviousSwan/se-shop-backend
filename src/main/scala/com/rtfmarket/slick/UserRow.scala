@@ -1,8 +1,6 @@
 package com.rtfmarket.slick
 
-import slick.dbio.Effect
 import slick.jdbc.H2Profile.api._
-import slick.sql.SqlAction
 
 case class UserId(value: Long) extends AnyVal with MappedTo[Long]
 
