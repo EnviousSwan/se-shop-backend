@@ -20,7 +20,7 @@ class ProductHttpSpec extends HttpSpec {
       }
     }
 
-    "respons with OK when categories list is empty" in new Scope {
+    "respond with OK when categories list is empty" in new Scope {
       when(productService.categories()) thenReturn List.empty.future
 
       Get("/categories") ~> service.route ~> check {

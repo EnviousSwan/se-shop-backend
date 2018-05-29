@@ -27,7 +27,7 @@ final class Filters(tag: Tag) extends Table[FilterRow](tag, "Filter") {
 
   def * = (id, name, title, description, multiple, categoryId).mapTo[FilterRow]
 
-  def category = foreignKey("category_fk", categoryId, Categories)(_.id)
+  def category = foreignKey("filter_category_fk", categoryId, Categories)(_.id)
 }
 
 object Filters extends TableQuery(new Filters(_)) {

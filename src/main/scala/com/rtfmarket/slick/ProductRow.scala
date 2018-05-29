@@ -18,12 +18,7 @@ case class ProductRow(
   description: String,
   categoryId: CategoryId,
   media: String,
-  price: Double) {
-
-  def properties: String = ???
-  def inCart(userId: UserId): Future[Boolean] = ???
-  def favourite(userId: UserId): Future[Boolean] = ???
-}
+  price: Double)
 
 final class Products(tag: Tag) extends Table[ProductRow](tag, "Product") {
   def id = column[ProductId]("id", O.PrimaryKey, O.AutoInc)
@@ -36,7 +31,7 @@ final class Products(tag: Tag) extends Table[ProductRow](tag, "Product") {
 
   def * = (id, name, title, description, categoryId, media, price).mapTo[ProductRow]
 
-  def category = foreignKey("category_fk", categoryId, Categories)(_.id)
+  def category = foreignKey("product_category_fk", categoryId, Categories)(_.id)
 }
 
 object Products extends TableQuery(new Products(_)) {

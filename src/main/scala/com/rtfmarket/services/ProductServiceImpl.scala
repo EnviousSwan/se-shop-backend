@@ -3,7 +3,6 @@ package com.rtfmarket.services
 import com.evolutiongaming.util.FutureOption
 import com.evolutiongaming.util.Validation._
 import com.rtfmarket.domain._
-import com.rtfmarket.services.ProductServiceImpl._
 import com.rtfmarket.slick._
 import play.api.libs.json.{Json, OFormat}
 import slick.jdbc.H2Profile.api.{Database => _, _}

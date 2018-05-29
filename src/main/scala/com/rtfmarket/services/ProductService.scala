@@ -2,7 +2,7 @@ package com.rtfmarket.services
 
 import com.evolutiongaming.util.Validation.FV
 import com.rtfmarket.domain.Category
-import com.rtfmarket.slick.{CategoryId, CategoryRow, ProductDetailsRow, ProductRow}
+import com.rtfmarket.slick.{ProductDetailsRow, ProductRow}
 
 import scala.concurrent.Future
 

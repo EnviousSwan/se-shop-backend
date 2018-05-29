@@ -18,8 +18,7 @@ object Category {
   def apply(
     row: CategoryRow,
     products: Seq[Product] = List.empty,
-    filters: Seq[Filter] = List.empty
-  )(implicit writes: Writes[Category]): Category =
+    filters: Seq[Filter] = List.empty): Category =
 
     Category(row.id, row.name, row.slug, row.title, row.description, products, filters)
 }
