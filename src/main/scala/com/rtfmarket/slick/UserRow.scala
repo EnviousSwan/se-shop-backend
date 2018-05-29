@@ -13,9 +13,9 @@ case class UserRow(
   email: String,
   firstName: String = "",
   lastName: String = "" ,
-  passwordSha: Option[String] = None,
-  phone: Option[String] = None,
-  address: Option[String] = None
+  password: String = "",
+  phone: String = "",
+  address: String = ""
 )
 
 final class Users(tag: Tag) extends Table[UserRow](tag, "User") {
@@ -23,19 +23,20 @@ final class Users(tag: Tag) extends Table[UserRow](tag, "User") {
   def email = column[String]("email")
   def firstName = column[String]("first_name")
   def lastName = column[String]("last_name")
-  def passwordSha = column[Option[String]]("pass_sha")
-  def phone = column[Option[String]]("phone")
-  def address = column[Option[String]]("address")
+  def passwordSha = column[String]("pass_sha")
+  def phone = column[String]("phone")
+  def address = column[String]("address")
 
   def * = (id, email, firstName, lastName, passwordSha, phone, address).mapTo[UserRow]
 }
 
 object Users extends TableQuery(new Users(_)) {
 
-  def userByEmail(email: String) = Users.filter(_.email === email)
+  lazy val byId = Compiled { id: Rep[UserId] => filter(_.id === id) }
 
-  def userByPhone(phone: String) = Users.filter(_.phone === phone)
+  lazy val byEmail = Compiled { email: Rep[String] => filter(_.email === email) }
 
-  def createUser(user: UserRow): DBIO[UserId] =
-    Users returning Users.map(_.id) += user
+  lazy val existsById = Compiled { id: Rep[UserId] => filter(_.id === id).length > 0 }
+
+  lazy val existsByEmail = Compiled { email: Rep[String] => filter(_.email === email).length > 0 }
 }

@@ -1,15 +1,13 @@
 package com.rtfmarket.http
 
-import akka.http.scaladsl.model.{ContentTypes, StatusCodes}
 import akka.http.scaladsl.marshallers.playjson.PlayJsonSupport._
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.model.StatusCodes
 import com.evolutiongaming.util.Validation._
+import com.rtfmarket.domain.User
+import com.rtfmarket.http.UserHttp.LoginRequest
 import com.rtfmarket.services.UserService
-import com.rtfmarket.slick.{UserId, UserRow}
+import com.rtfmarket.slick.UserId
 import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
-import UserHttp.{LoginRequest, userFormat}
 import org.mockito.{ArgumentMatchers => M}
 
 class UserHttpSpec extends HttpSpec {
@@ -80,7 +78,7 @@ class UserHttpSpec extends HttpSpec {
 
     "respond with OK for get stub" in new Scope {
       when(userService.userExists(id)) thenReturn true.future
-      when(userService.user(id)) thenReturn user.ok.fe[String]
+      when(userService.findUser(id)) thenReturn user.ok.fe[String]
 
       Get(s"/user/${id.value}") ~> service.route ~> check {
         status shouldBe StatusCodes.OK
@@ -130,14 +128,14 @@ class UserHttpSpec extends HttpSpec {
     val email = "example@mail.com"
     val password = "password"
 
-    val user = UserRow(
+    val user = User(
       id = id,
       email = email,
       firstName = "John",
       lastName = "Doe",
-      passwordSha = Some(password),
-      phone = Some("+123424"),
-      address = Some("NYC")
+      password = password,
+      phone = "+123424",
+      address = "NYC"
     )
 
     val loginRequest = LoginRequest(email, password)

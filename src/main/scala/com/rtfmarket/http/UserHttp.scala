@@ -4,9 +4,11 @@ import akka.http.scaladsl.marshallers.playjson.PlayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import com.rtfmarket.domain.User
 import com.rtfmarket.http.IdMatchers._
 import com.rtfmarket.http.UserHttp._
 import com.rtfmarket.services.UserService
+import com.rtfmarket.services.UserServiceImpl.UserFormat
 import com.rtfmarket.slick.{UserId, UserRow}
 import play.api.libs.json._
 
@@ -17,10 +19,10 @@ class UserHttp(userService: UserService) {
   val route: Route =
     pathPrefix("user") {
       pathEndOrSingleSlash {
-        (post & entity(as[UserRow])) { request =>
+        (post & entity(as[User])) { request =>
           onComplete(userService.createUser(request).future) {
             case Success(Right(_))      =>
-              complete(StatusCodes.OK)
+              complete(Just(StatusCodes.OK).toResponse)
             case Success(Left(message)) =>
               complete(Error(StatusCodes.BadRequest, message).toResponse)
             case _                      =>
@@ -35,8 +37,8 @@ class UserHttp(userService: UserService) {
               complete(Error(StatusCodes.NotFound, s"No user found with email ${req.email}").toResponse)
             case Success(true) =>
               onComplete(userService.loginUser(req.email, req.password).future) {
-                case Success(Right(_))      =>
-                  complete(StatusCodes.OK)
+                case Success(Right(user))      =>
+                  complete(Just(StatusCodes.OK).toResponse)
                 case Success(Left(message)) =>
                   complete(Error(StatusCodes.BadRequest, message).toResponse)
                 case _                      =>
@@ -49,35 +51,35 @@ class UserHttp(userService: UserService) {
       } ~
       path("logout") {
         get {
-          complete(StatusCodes.OK)
+          onComplete(userService.logoutUser(UserId(1)).future) {
+            case Success(Right(_))      =>
+              complete(Just(StatusCodes.OK).toResponse)
+            case Success(Left(message)) =>
+              complete(Error(StatusCodes.NotFound, message).toResponse)
+            case _                      =>
+              complete(StatusCodes.InternalServerError)
+          }
         }
       } ~
       path(Id[UserId]) { id =>
         get {
-          onComplete(userService.userExists(id)) {
-            case Success(false) =>
-              complete(Error(StatusCodes.NotFound, s"No user found with id $id").toResponse)
-            case Success(true)  =>
-              onComplete(userService.user(id).future) {
-                case Success(Right(_)) =>
-                  complete(StatusCodes.OK)
-                case Success(Left(message)) =>
-                  complete(Error(StatusCodes.BadRequest, message).toResponse)
-                case _ =>
-                  complete(StatusCodes.InternalServerError)
-              }
-            case _ =>
+          onComplete(userService.findUser(id).future) {
+            case Success(Right(user))   =>
+              complete(Just(user).toResponse)
+            case Success(Left(message)) =>
+              complete(Error(StatusCodes.NotFound, message).toResponse)
+            case _                      =>
               complete(StatusCodes.InternalServerError)
           }
         } ~
-        (put & entity(as[UserRow])) { req =>
+        (put & entity(as[User])) { req =>
           onComplete(userService.userExists(id)) {
             case Success(false) =>
               complete(Error(StatusCodes.NotFound, s"No user found with id $id").toResponse)
             case Success(true) =>
               onComplete(userService.updateUser(req).future) {
                 case Success(Right(_)) =>
-                  complete(StatusCodes.OK)
+                  complete(Just(StatusCodes.OK).toResponse)
                 case Success(Left(message)) =>
                   complete(Error(StatusCodes.BadRequest, message).toResponse)
                 case _ =>
@@ -88,7 +90,14 @@ class UserHttp(userService: UserService) {
           }
         } ~
         delete {
-          complete(StatusCodes.OK)
+          onComplete(userService.deleteUser(id).future) {
+            case Success(Right(_))      =>
+              complete(Just(StatusCodes.OK).toResponse)
+            case Success(Left(message)) =>
+              complete(Error(StatusCodes.NotFound, message).toResponse)
+            case _                      =>
+              complete(StatusCodes.InternalServerError)
+          }
         }
       }
     }

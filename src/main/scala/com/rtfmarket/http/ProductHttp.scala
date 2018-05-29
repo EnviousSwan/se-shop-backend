@@ -5,7 +5,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import com.rtfmarket.services.ProductService
 import com.rtfmarket.slick._
-import play.api.libs.json.{Json, OFormat, Writes}
 import com.rtfmarket.domain._
 import com.rtfmarket.services.ProductServiceImpl._
 

@@ -1,8 +1,8 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
-import com.rtfmarket.http.{MainRoute, ProductHttp}
-import com.rtfmarket.services.ProductServiceImpl
+import com.rtfmarket.http.{MainRoute, ProductHttp, UserHttp}
+import com.rtfmarket.services.{ProductServiceImpl, UserServiceImpl}
 import akka.http.scaladsl.server.Directives._
 import com.rtfmarket.slick._
 import com.rtfmarket.slick.Database
@@ -11,8 +11,6 @@ import slick.jdbc.H2Profile.api._
 import scala.concurrent.Await
 import scala.io.StdIn
 import scala.concurrent.duration._
-import scala.reflect
-import scala.reflect.api
 
 object Main extends App {
 
@@ -30,16 +28,31 @@ object Main extends App {
     description = "not kidding"
   )
 
+  val user = UserRow(
+    id = UserId.Test,
+    email = "example@mail.com",
+    firstName = "roman",
+    lastName = "lebid",
+    password = "pass",
+    phone = "+380508453060",
+    address = "just around the corner"
+  )
+
   val createCategories = Categories.schema.create
   val createProducts = Products.schema.create
   val createFilters = Filters.schema.create
+  val createUsers = Users.schema.create
 
-  val insert = Categories += category
+  val insertCategories = Categories += category
+  val insertUsers = Users += user
+
   val future = db run (
     createCategories andThen
       createProducts andThen
       createFilters andThen
-      insert)
+      createUsers andThen
+      insertCategories andThen
+      insertUsers)
 
   val result = Await.result(future, 2.seconds)
 
@@ -47,7 +60,11 @@ object Main extends App {
   val productService = new ProductServiceImpl(productDb)
   val productHttp = new ProductHttp(productService)
 
-  val route = MainRoute.route ~ productHttp.route
+  val userDb = new UserServiceImpl.Db(db)
+  val userService = new UserServiceImpl(userDb)
+  val userHttp = new UserHttp(userService)
+
+  val route = MainRoute.route ~ productHttp.route ~ userHttp.route
 
   val bindingFuture = Http().bindAndHandle(route, "localhost", 8081)
 

@@ -33,6 +33,5 @@ object Product {
       productRow.name,
       productRow.title,
       productRow.description,
-      productRow.categoryId
-    )
+      productRow.categoryId)
 }
