@@ -30,7 +30,7 @@ trait HttpRoute {
         complete(StatusCodes.InternalServerError)
     }
 
-  def handle[T <: Data[T]](future: => Future[V[T]], errorCode: StatusCode, withBody: Boolean = false)
+  def handle[T <: Data[T]](future: => Future[V[T]], errorCode: StatusCode, withBody: Boolean = true)
     (implicit writes: Writes[T]): Route =
 
     onComplete(future) {

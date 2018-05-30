@@ -31,7 +31,7 @@ class ProductHttp(productService: ProductService)
     } ~
     pathPrefix("products") {
       path("category" / Segment) { slug =>
-        parameters('sort.?, 'order. ?, "filter[]".?) { (sort, order, filters) =>
+        parameters('sort.?, 'order.?) { (sort, order) =>
           get {
             handle(productService.category(slug).future, StatusCodes.NotFound)
           }
@@ -48,4 +48,16 @@ class ProductHttp(productService: ProductService)
         }
       }
     }
+
+//  private def sortProduct(products: List[Product], sort: Option[String], order: Option[String]) = {
+//    val sorter: (a: Product, b: Product) => Boolean =
+//      sort match {
+//        case Some("price") =>
+//          order match {
+//            case Some("asc") =>
+//          }
+//        case Some("date")  =>
+//        case _             => products
+//      }
+//  }
 }

@@ -15,6 +15,7 @@ case class ProductProperty(
 case class Product(
   id: ProductId = ProductId.Test,
   name: String = "name",
+  slug: String = "slug",
   title: String = "title",
   description: String = "description",
   categoryId: CategoryId = CategoryId.Test,
@@ -31,6 +32,7 @@ object Product {
     Product(
       productRow.id,
       productRow.name,
+      productRow.slug,
       productRow.title,
       productRow.description,
       productRow.categoryId)
@@ -44,7 +46,7 @@ object Product {
       product.id,
       product.name,
       product.title,
-      product.name,
+      product.slug,
       product.description,
       product.categoryId,
       product.media.main,
