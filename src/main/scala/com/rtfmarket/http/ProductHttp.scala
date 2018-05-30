@@ -11,7 +11,8 @@ import com.rtfmarket.services.ProductServiceImpl._
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
-class ProductHttp(productService: ProductService)(implicit executionContext: ExecutionContext) {
+class ProductHttp(productService: ProductService
+)(implicit executionContext: ExecutionContext) extends HttpRoute {
 
   val route: Route =
     path("categories") {
@@ -28,14 +29,7 @@ class ProductHttp(productService: ProductService)(implicit executionContext: Exe
       path("category" / Segment) { slug =>
         parameters('sort.?, 'order.?, "filter[]".?) { (sort, order, filters) =>
           get {
-            onComplete(productService.category(slug).future) {
-              case Success(Right(category)) =>
-                complete(Just(category).toResponse)
-              case Success(Left(message))   =>
-                complete(Error(StatusCodes.NotFound, message).toResponse)
-              case _                        =>
-                complete(StatusCodes.InternalServerError)
-            }
+            handle(productService.category(slug).future, StatusCodes.NotFound)
           }
         }
       } ~

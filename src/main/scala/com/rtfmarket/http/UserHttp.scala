@@ -14,92 +14,50 @@ import play.api.libs.json._
 
 import scala.util.Success
 
-class UserHttp(userService: UserService) {
+class UserHttp(userService: UserService) extends HttpRoute {
 
   val route: Route =
     pathPrefix("user") {
       pathEndOrSingleSlash {
         (post & entity(as[User])) { request =>
-          onComplete(userService.createUser(request).future) {
-            case Success(Right(_))      =>
-              complete(Just(StatusCodes.OK).toResponse)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.BadRequest, message).toResponse)
-            case _                      =>
-              complete(StatusCodes.InternalServerError)
-          }
+          handleUnit(userService.createUser(request).future, StatusCodes.BadRequest)
         }
       } ~
-      path("login") {
-        (post & entity(as[LoginRequest])) { req =>
-          onComplete(userService.userExists(req.email)) {
-            case Success(false) =>
-              complete(Error(StatusCodes.NotFound, s"No user found with email ${req.email}").toResponse)
-            case Success(true) =>
-              onComplete(userService.loginUser(req.email, req.password).future) {
-                case Success(Right(user))      =>
-                  complete(Just(StatusCodes.OK).toResponse)
-                case Success(Left(message)) =>
-                  complete(Error(StatusCodes.BadRequest, message).toResponse)
-                case _                      =>
-                  complete(StatusCodes.InternalServerError)
-              }
-            case _ =>
-              complete(StatusCodes.InternalServerError)
-          }
-        }
-      } ~
-      path("logout") {
-        get {
-          onComplete(userService.logoutUser(UserId(1)).future) {
-            case Success(Right(_))      =>
-              complete(Just(StatusCodes.OK).toResponse)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.NotFound, message).toResponse)
-            case _                      =>
-              complete(StatusCodes.InternalServerError)
-          }
-        }
-      } ~
-      path(Id[UserId]) { id =>
-        get {
-          onComplete(userService.findUser(id).future) {
-            case Success(Right(user))   =>
-              complete(Just(user).toResponse)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.NotFound, message).toResponse)
-            case _                      =>
-              complete(StatusCodes.InternalServerError)
+        path("login") {
+          (post & entity(as[LoginRequest])) { req =>
+            onComplete(userService.userExists(req.email)) {
+              case Success(false) =>
+                complete(Error(StatusCodes.NotFound, s"No user found with email ${req.email}").toResponse)
+              case Success(true) =>
+                handleUnit(userService.loginUser(req.email, req.password).future, StatusCodes.BadRequest)
+              case _ =>
+                complete(StatusCodes.InternalServerError)
+            }
           }
         } ~
-        (put & entity(as[User])) { req =>
-          onComplete(userService.userExists(id)) {
-            case Success(false) =>
-              complete(Error(StatusCodes.NotFound, s"No user found with id $id").toResponse)
-            case Success(true) =>
-              onComplete(userService.updateUser(req).future) {
-                case Success(Right(_)) =>
-                  complete(Just(StatusCodes.OK).toResponse)
-                case Success(Left(message)) =>
-                  complete(Error(StatusCodes.BadRequest, message).toResponse)
+        path("logout") {
+          get {
+            handleUnit(userService.logoutUser(UserId(1)).future, StatusCodes.NotFound)
+          }
+        } ~
+        path(Id[UserId]) { id =>
+          get {
+            handle(userService.findUser(id).future, StatusCodes.NotFound, withBody = true)
+          } ~
+            (put & entity(as[User])) { req =>
+              onComplete(userService.userExists(id)) {
+                case Success(false) =>
+                  complete(Error(StatusCodes.NotFound, s"No user found with id $id").toResponse)
+                case Success(true) =>
+                  handleUnit(userService.updateUser(req).future, StatusCodes.BadRequest)
                 case _ =>
                   complete(StatusCodes.InternalServerError)
               }
-            case _ =>
-              complete(StatusCodes.InternalServerError)
-          }
-        } ~
-        delete {
-          onComplete(userService.deleteUser(id).future) {
-            case Success(Right(_))      =>
-              complete(Just(StatusCodes.OK).toResponse)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.NotFound, message).toResponse)
-            case _                      =>
-              complete(StatusCodes.InternalServerError)
-          }
+            } ~
+            delete {
+              handleUnit(userService.deleteUser(id).future, StatusCodes.NotFound)
+            }
         }
-      }
     }
 }
 
