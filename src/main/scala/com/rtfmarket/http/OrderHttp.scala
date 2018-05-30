@@ -7,8 +7,8 @@ import akka.http.scaladsl.server.Route
 import com.rtfmarket.services.OrderService
 import com.rtfmarket.slick._
 import IdMatchers._
+import com.rtfmarket.domain.Order
 import play.api.libs.json.{Json, OFormat}
-import OrderHttp.OrderFormat
 import com.softwaremill.session.SessionManager
 
 import scala.concurrent.ExecutionContext
@@ -16,6 +16,8 @@ import scala.concurrent.ExecutionContext
 class OrderHttp(orderService: OrderService)
   (implicit val sessionManager: SessionManager[UserId],
     val executionContext: ExecutionContext) extends HttpRoute {
+
+  import OrderHttp.OrderFormat
 
   val route: Route =
     pathPrefix("orders") {
@@ -64,5 +66,7 @@ class OrderHttp(orderService: OrderService)
 object OrderHttp {
   import IdFormats._
 
-  implicit val OrderFormat: OFormat[OrderRow] = Json.format[OrderRow]
+  import com.rtfmarket.services.CartServiceImpl.CartItemFormat
+
+  implicit val OrderFormat: OFormat[Order] = Json.format[Order]
 }

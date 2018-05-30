@@ -42,9 +42,9 @@ class ProductHttp(productService: ProductService)
           handle(productService.productDetails(id).future, StatusCodes.NotFound)
         }
       } ~
-      path(Id[ProductId]) { id =>
+      path(Segment) { slug =>
         get {
-          handle(productService.product(id).future, StatusCodes.NotFound)
+          handle(productService.product(slug).future, StatusCodes.NotFound)
         }
       }
     }

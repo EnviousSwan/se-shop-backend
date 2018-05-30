@@ -24,8 +24,8 @@ class ProductServiceImpl(db: ProductService.Db)
       cat <- categoryFromRow(row).fe
     } yield cat
 
-  def product(id: ProductId): FV[Product] =
-    (db.product(id).fo map Product.apply) ?>> s"No product found with id $id"
+  def product(slug: String): FV[Product] =
+    (db.product(slug).fo map Product.apply) ?>> s"No product found with slug $slug"
 
   def productDetails(productId: ProductId): FV[ProductDetails] =
     ProductDetails().ok.fe[String]
@@ -68,7 +68,7 @@ object ProductServiceImpl {
     def filtersByCategory(categoryId: CategoryId): Future[Seq[FilterRow]] =
       db run Filters.byCategoryId(categoryId).result
 
-    def product(id: ProductId): Future[Option[ProductRow]] =
-      db run Products.byId(id).result.headOption
+    def product(slug: String): Future[Option[ProductRow]] =
+      db run Products.bySlug(slug).result.headOption
   }
 }

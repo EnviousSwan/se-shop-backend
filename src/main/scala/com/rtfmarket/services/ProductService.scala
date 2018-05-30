@@ -14,7 +14,7 @@ trait ProductService {
 
   def productDetails(id: ProductId): FV[ProductDetails]
 
-  def product(id: ProductId): FV[Product]
+  def product(slug: String): FV[Product]
 }
 
 object ProductService {
@@ -28,6 +28,6 @@ object ProductService {
 
     def filtersByCategory(categoryId: CategoryId): Future[Seq[FilterRow]]
 
-    def product(id: ProductId): Future[Option[ProductRow]]
+    def product(slug: String): Future[Option[ProductRow]]
   }
 }

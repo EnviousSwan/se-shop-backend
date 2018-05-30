@@ -13,6 +13,7 @@ case class ProductRow(
   id: ProductId,
   name: String,
   title: String,
+  slug: String,
   description: String,
   categoryId: CategoryId,
   media: String,
@@ -22,12 +23,13 @@ final class Products(tag: Tag) extends Table[ProductRow](tag, "Product") {
   def id = column[ProductId]("id", O.PrimaryKey, O.AutoInc)
   def name = column[String]("name")
   def title = column[String]("title")
+  def slug = column[String]("slug")
   def description = column[String]("description")
   def categoryId = column[CategoryId]("category_id")
   def media = column[String]("media")
   def price = column[Double]("price")
 
-  def * = (id, name, title, description, categoryId, media, price).mapTo[ProductRow]
+  def * = (id, name, title, slug, description, categoryId, media, price).mapTo[ProductRow]
 
   def category = foreignKey("product_category_fk", categoryId, Categories)(_.id)
 }
@@ -38,4 +40,6 @@ object Products extends TableQuery(new Products(_)) {
   }
 
   lazy val byId = Compiled { id: Rep[ProductId] => filter(_.id === id) }
+
+  lazy val bySlug = Compiled { slug: Rep[String] => filter(_.slug === slug) }
 }
