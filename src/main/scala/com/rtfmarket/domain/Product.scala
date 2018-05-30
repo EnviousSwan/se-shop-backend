@@ -44,6 +44,7 @@ object Product {
       product.id,
       product.name,
       product.title,
+      product.name,
       product.description,
       product.categoryId,
       product.media.main,
