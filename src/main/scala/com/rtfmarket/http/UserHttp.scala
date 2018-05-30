@@ -85,13 +85,13 @@ class UserHttp(userService: UserService)
     }
 }
 
-  object UserHttp {
+object UserHttp {
 
-    import IdFormats.UserIdFormat
+  import IdFormats.UserIdFormat
 
-    implicit val userFormat: OFormat[UserRow] = Json.format[UserRow]
+  implicit val userFormat: OFormat[UserRow] = Json.format[UserRow]
 
-    case class LoginRequest(email: String, password: String)
+  case class LoginRequest(email: String, password: String)
 
-    implicit val loginRequestFormat: OFormat[LoginRequest] = Json.format[LoginRequest]
-  }
+  implicit val loginRequestFormat: OFormat[LoginRequest] = Json.format[LoginRequest]
+}

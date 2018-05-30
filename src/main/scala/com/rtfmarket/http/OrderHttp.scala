@@ -9,43 +9,43 @@ import com.rtfmarket.slick._
 import IdMatchers._
 import play.api.libs.json.{Json, OFormat}
 import OrderHttp.OrderFormat
+import com.rtfmarket.domain.Order
+import com.softwaremill.session.SessionManager
 
+import scala.collection.immutable
+import scala.concurrent.ExecutionContext
 import scala.util.Success
 
-class OrderHttp(orderService: OrderService) {
+class OrderHttp(orderService: OrderService)
+  (implicit val sessionManager: SessionManager[UserId],
+    val executionContext: ExecutionContext) extends HttpRoute {
+
   val route: Route =
     pathPrefix("orders") {
       pathEndOrSingleSlash {
-        (post & entity(as[OrderRow])) { order =>
-          onComplete(orderService.placeOrder(UserId.Test, order).future) {
-            case Success(Right(_))      =>
-              complete(StatusCodes.OK)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.BadRequest, message).toResponse)
-            case _                      =>
-              complete(StatusCodes.InternalServerError)
-          }
+        (post & withSession) { userId => implicit context =>
+          handleInContext(orderService.placeOrder(userId).future, StatusCodes.BadRequest)
         } ~
-        get {
-          onComplete(orderService.orders(UserId.Test).future) {
-            case Success(Right(_)) =>
-              complete(StatusCodes.OK)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.BadRequest, message).toResponse)
-            case _ =>
-              complete(StatusCodes.InternalServerError)
+        (get & withSession) { userId => implicit context =>
+          orderService.orders(userId).future flatMap {
+            case Right(orders) =>
+              context.complete(Just(orders).toResponse)
+            case Left(message) =>
+              context.complete(Error(StatusCodes.BadRequest, message).toResponse)
+          } recoverWith {
+            case e => context.complete(StatusCodes.InternalServerError)
           }
         }
       } ~
       path(Id[OrderId]) { id =>
-        get {
-          onComplete(orderService.order(id).future) {
-            case Success(Right(_)) =>
-              complete(StatusCodes.OK)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.NotFound, message).toResponse)
-            case _ =>
-              complete(StatusCodes.InternalServerError)
+        (get & withSession) { userId => implicit context =>
+          orderService.order(id).future flatMap {
+            case Right(order)  =>
+              context.complete(Just(order).toResponse)
+            case Left(message) =>
+              context.complete(Error(StatusCodes.NotFound, message).toResponse)
+          } recoverWith {
+            case e => context.complete(StatusCodes.InternalServerError)
           }
         }
       } ~

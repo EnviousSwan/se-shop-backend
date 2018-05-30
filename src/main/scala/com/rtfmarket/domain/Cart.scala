@@ -5,7 +5,7 @@ import com.rtfmarket.slick.{CartId, CartRow, UserId}
 
 case class CartItem(count: Int = 0, products: List[Product] = List(Product()))
 
-case class Cart(cartItems: List[CartItem] = List(CartItem())) extends Data[Cart]
+case class Cart(items: List[CartItem] = List(CartItem())) extends Data[Cart]
 
 object Cart {
   def apply(cartRow: CartRow): Cart = Cart()
