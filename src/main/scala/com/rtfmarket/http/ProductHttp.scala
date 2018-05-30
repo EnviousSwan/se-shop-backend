@@ -49,15 +49,20 @@ class ProductHttp(productService: ProductService)
       }
     }
 
-//  private def sortProduct(products: List[Product], sort: Option[String], order: Option[String]) = {
-//    val sorter: (a: Product, b: Product) => Boolean =
-//      sort match {
-//        case Some("price") =>
-//          order match {
-//            case Some("asc") =>
-//          }
-//        case Some("date")  =>
-//        case _             => products
-//      }
-//  }
+  private def sortedProducts(products: List[Product], sort: Option[String], order: Option[String]) =
+    products sortWith { (a, b) =>
+      sort match {
+        case Some("price") =>
+          order match {
+            case Some("desc") => a.price > b.price
+            case _            => a.price < b.price
+          }
+        case Some("date")  =>
+          order match {
+            case Some("desc") => a.createDate > b.createDate
+            case _            => a.createDate < b.createDate
+          }
+        case _             => a.id.value < b.id.value
+      }
+    }
 }

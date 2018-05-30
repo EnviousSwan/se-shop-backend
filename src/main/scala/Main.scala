@@ -1,5 +1,7 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.headers.LinkParams
+import akka.http.scaladsl.model.headers.LinkParams.{media, title}
 import akka.stream.ActorMaterializer
 import com.rtfmarket.http.{MainRoute, ProductHttp, UserHttp}
 import com.rtfmarket.services.{ProductServiceImpl, UserServiceImpl}
@@ -54,6 +56,17 @@ object Main extends App {
     address = "just around the corner"
   )
 
+  val product = ProductRow(
+    id = ProductId.Test,
+    name = "hoodie",
+    title = "Star Wars Hoodie",
+    slug = "sw_hoodie",
+    description = "The most amazing hoodie in your life",
+    categoryId = CategoryId(1),
+    media = "https://images-na.ssl-images-amazon.com/images/I/81Qdx9MFLgL._UX385_.jpg",
+    price = 100
+  )
+
   val createCategories = Categories.schema.create
   val createProducts = Products.schema.create
   val createFilters = Filters.schema.create
@@ -61,6 +74,7 @@ object Main extends App {
 
   val insertCategories = Categories += category
   val insertUsers = Users += user
+  val insertProducts = Products += product
 
   val future = db run (
     createCategories andThen
@@ -68,7 +82,8 @@ object Main extends App {
       createFilters andThen
       createUsers andThen
       insertCategories andThen
-      insertUsers)
+      insertUsers andThen
+    insertProducts)
 
   val result = Await.result(future, 2.seconds)
 
