@@ -3,30 +3,25 @@ package com.rtfmarket.http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import com.rtfmarket.http.CartHttp.Cart
-import com.rtfmarket.domain.Product
+import com.rtfmarket.domain.{Cart, CartItem}
 import com.rtfmarket.services.{CartService, ProductService}
-import com.rtfmarket.slick.{CartRow, UserId}
+import com.rtfmarket.slick.UserId
+import com.rtfmarket.services.CartServiceImpl.CartFormat
+import com.softwaremill.session.SessionManager
 import play.api.libs.json.{Json, OFormat}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 class CartHttp(cartService: CartService, productService: ProductService)
-  (implicit executionContext: ExecutionContext) {
+  (implicit val sessionManager: SessionManager[String],
+    val executionContext: ExecutionContext) extends HttpRoute {
 
   val route: Route =
     pathPrefix("cart") {
       pathEndOrSingleSlash {
         get {
-          onComplete(cartService.cart(UserId.Test).future) {
-            case Success(Right(cart)) =>
-              complete(Just(Cart(cart)).toResponse)
-            case Success(Left(message)) =>
-              complete(Error(StatusCodes.NotFound, message).toResponse)
-            case _ =>
-              complete(StatusCodes.InternalServerError)
-          }
+          handle(cartService.cart(UserId.Test).future, StatusCodes.NotFound)
         }
       } ~
       path("product" / Segment) { slug =>
@@ -57,14 +52,7 @@ class CartHttp(cartService: CartService, productService: ProductService)
               _ <- cartService.changeProductQuantity(UserId.Test, product.id, 2)
             } yield ()
 
-            onComplete(result.future) {
-              case Success(Right(_))      =>
-                complete(Just(StatusCodes.OK).toResponse)
-              case Success(Left(message)) =>
-                complete(Error(StatusCodes.NotFound, message).toResponse)
-              case _                      =>
-                complete(StatusCodes.InternalServerError)
-            }
+            handleUnit(result.future, StatusCodes.NotFound)
           }
         }
       }
@@ -76,29 +64,7 @@ class CartHttp(cartService: CartService, productService: ProductService)
       _ <- cartService.removeProduct(UserId.Test, product.id)
     } yield ()
 
-    onComplete(result.future) {
-      case Success(Right(_))      =>
-        complete(Just(StatusCodes.OK).toResponse)
-      case Success(Left(message)) =>
-        complete(Error(StatusCodes.NotFound, message).toResponse)
-      case _                      =>
-        complete(StatusCodes.InternalServerError)
-    }
+    handleUnit(result.future, StatusCodes.NotFound)
   }
 }
 
-object CartHttp {
-
-  import com.rtfmarket.services.ProductServiceImpl.ProductFormat
-
-  case class CartItem(count: Int = 1, products: List[Product] = List(Product()))
-
-  case class Cart(cartItems: List[CartItem] = List(CartItem())) extends Data[Cart]
-
-  object Cart {
-    def apply(cartRow: CartRow): Cart = Cart()
-  }
-
-  implicit val CartItemFormat: OFormat[CartItem] = Json.format[CartItem]
-  implicit val CartFormat: OFormat[Cart] = Json.format[Cart]
-}

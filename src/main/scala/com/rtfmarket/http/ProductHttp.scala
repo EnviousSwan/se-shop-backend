@@ -7,12 +7,14 @@ import com.rtfmarket.services.ProductService
 import com.rtfmarket.slick._
 import com.rtfmarket.domain._
 import com.rtfmarket.services.ProductServiceImpl._
+import com.softwaremill.session.SessionManager
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
-class ProductHttp(productService: ProductService
-)(implicit executionContext: ExecutionContext) extends HttpRoute {
+class ProductHttp(productService: ProductService)
+  (implicit val sessionManager: SessionManager[String],
+    val executionContext: ExecutionContext) extends HttpRoute {
 
   val route: Route =
     path("categories") {

@@ -20,5 +20,5 @@ final class Carts(tag: Tag) extends Table[CartRow](tag, "Cart") {
 }
 
 object Carts extends TableQuery(new Carts(_)) {
-
+  lazy val byId = Compiled { id: Rep[CartId] => filter(_.id === id) }
 }

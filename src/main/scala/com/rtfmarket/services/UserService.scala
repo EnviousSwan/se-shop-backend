@@ -16,7 +16,7 @@ trait UserService {
 
   def loginUser(email: String, password: String): FV[Unit]
 
-  def logoutUser(userId: UserId): FV[Unit]
+  def logoutUser(email: String): FV[Unit]
 
   def findUser(email: String): FV[User]
 

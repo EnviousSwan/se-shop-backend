@@ -13,7 +13,7 @@ case class UserRow(
   email: String,
   firstName: String = "",
   lastName: String = "" ,
-  password: String = "",
+  passwordMd: String = "",
   phone: String = "",
   address: String = ""
 )

@@ -10,11 +10,18 @@ import com.rtfmarket.http.UserHttp._
 import com.rtfmarket.services.UserService
 import com.rtfmarket.services.UserServiceImpl.UserFormat
 import com.rtfmarket.slick.{UserId, UserRow}
+import com.softwaremill.session.SessionDirectives._
+import com.softwaremill.session.SessionOptions._
+import com.softwaremill.session.{InMemoryRefreshTokenStorage, SessionConfig, SessionManager}
+import com.typesafe.scalalogging.LazyLogging
 import play.api.libs.json._
 
+import scala.concurrent.ExecutionContext
 import scala.util.Success
 
-class UserHttp(userService: UserService) extends HttpRoute {
+class UserHttp(userService: UserService)
+  (implicit val sessionManager: SessionManager[String],
+    val executionContext: ExecutionContext) extends HttpRoute with LazyLogging {
 
   val route: Route =
     pathPrefix("user") {
@@ -26,23 +33,42 @@ class UserHttp(userService: UserService) extends HttpRoute {
         path("login") {
           (post & entity(as[LoginRequest])) { req =>
             onComplete(userService.userExists(req.email)) {
+
               case Success(false) =>
-                complete(Error(StatusCodes.NotFound, s"No user found with email ${req.email}").toResponse)
-              case Success(true) =>
-                handleUnit(userService.loginUser(req.email, req.password).future, StatusCodes.BadRequest)
-              case _ =>
-                complete(StatusCodes.InternalServerError)
+                complete(Error(StatusCodes.NotFound, s"No user found with email ${ req.email }").toResponse)
+
+              case Success(true)  =>
+                onComplete(userService.loginUser(req.email, req.password).future) {
+                  case Success(Right(_))      =>
+                    mySetSession(req.email) {
+                      complete(Just(StatusCodes.OK).toResponse)
+                    }
+
+                    case Success(Left(message)) =>
+                      complete(Error(StatusCodes.BadRequest, message).toResponse)
+                    case _                      =>
+                      complete(StatusCodes.InternalServerError)
+                  }
+                case _              =>
+                  complete(StatusCodes.InternalServerError)
+              }
             }
-          }
         } ~
         path("logout") {
           get {
-            handleUnit(userService.logoutUser(UserId(1)).future, StatusCodes.NotFound)
+            requiredSession { session =>
+              invalidateSession { context =>
+                context.complete(StatusCodes.OK)
+              }
+            }
           }
         } ~
         path(Id[UserId]) { id =>
           get {
-            handle(userService.findUser(id).future, StatusCodes.NotFound, withBody = true)
+            requiredSession { userId => context =>
+              logger.info("Current session: " + userId)
+              handleIn(context)(userService.findUser(userId).future, StatusCodes.NotFound, withBody = true)
+            }
           } ~
             (put & entity(as[User])) { req =>
               onComplete(userService.userExists(id)) {
@@ -62,6 +88,7 @@ class UserHttp(userService: UserService) extends HttpRoute {
 }
 
 object UserHttp {
+
   import IdFormats.UserIdFormat
 
   implicit val userFormat: OFormat[UserRow] = Json.format[UserRow]

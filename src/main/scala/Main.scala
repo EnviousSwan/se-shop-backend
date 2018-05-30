@@ -6,6 +6,7 @@ import com.rtfmarket.services.{ProductServiceImpl, UserServiceImpl}
 import akka.http.scaladsl.server.Directives._
 import com.rtfmarket.slick._
 import com.rtfmarket.slick.Database
+import com.softwaremill.session.{SessionConfig, SessionManager}
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.Await
@@ -20,6 +21,9 @@ object Main extends App {
 
   val db = Database.forConfig("rtfm")
 
+  val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
+  implicit val sessionManager: SessionManager[String] = new SessionManager[String](sessionConfig)
+
   val category = CategoryRow(
     id = CategoryId.Test,
     name = "clothes",
@@ -33,7 +37,7 @@ object Main extends App {
     email = "example@mail.com",
     firstName = "roman",
     lastName = "lebid",
-    password = "pass",
+    passwordMd = "pass",
     phone = "+380508453060",
     address = "just around the corner"
   )

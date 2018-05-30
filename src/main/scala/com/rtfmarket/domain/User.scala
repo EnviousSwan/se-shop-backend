@@ -19,7 +19,7 @@ object User {
       userRow.email,
       userRow.firstName,
       userRow.lastName,
-      userRow.password,
+      userRow.passwordMd,
       userRow.phone,
       userRow.address)
 

@@ -34,4 +34,18 @@ object Product {
       productRow.title,
       productRow.description,
       productRow.categoryId)
+
+  implicit class ProductOps(val value: Product) extends AnyVal {
+    def toRow: ProductRow = toProductRow(value)
+  }
+
+  def toProductRow(product: Product): ProductRow =
+    ProductRow(
+      product.id,
+      product.name,
+      product.title,
+      product.description,
+      product.categoryId,
+      product.media.main,
+      product.price)
 }
