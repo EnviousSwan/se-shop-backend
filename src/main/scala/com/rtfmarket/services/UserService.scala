@@ -14,7 +14,7 @@ trait UserService {
 
   def userExists(id: UserId): Future[Boolean]
 
-  def loginUser(email: String, password: String): FV[Unit]
+  def loginUser(email: String, password: String): FV[UserId]
 
   def logoutUser(email: String): FV[Unit]
 
@@ -28,6 +28,7 @@ trait UserService {
 }
 
 object UserService {
+
   trait Db {
 
     def insertUser(user: UserRow): Future[Int]

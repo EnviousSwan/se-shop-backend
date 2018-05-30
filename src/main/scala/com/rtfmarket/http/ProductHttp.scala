@@ -13,7 +13,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 class ProductHttp(productService: ProductService)
-  (implicit val sessionManager: SessionManager[String],
+  (implicit val sessionManager: SessionManager[UserId],
     val executionContext: ExecutionContext) extends HttpRoute {
 
   val route: Route =

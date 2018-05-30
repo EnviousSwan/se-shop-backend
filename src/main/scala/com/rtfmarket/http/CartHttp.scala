@@ -3,18 +3,16 @@ package com.rtfmarket.http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import com.rtfmarket.domain.{Cart, CartItem}
 import com.rtfmarket.services.{CartService, ProductService}
 import com.rtfmarket.slick.UserId
 import com.rtfmarket.services.CartServiceImpl.CartFormat
 import com.softwaremill.session.SessionManager
-import play.api.libs.json.{Json, OFormat}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 class CartHttp(cartService: CartService, productService: ProductService)
-  (implicit val sessionManager: SessionManager[String],
+  (implicit val sessionManager: SessionManager[UserId],
     val executionContext: ExecutionContext) extends HttpRoute {
 
   val route: Route =
@@ -52,7 +50,7 @@ class CartHttp(cartService: CartService, productService: ProductService)
               _ <- cartService.changeProductQuantity(UserId.Test, product.id, 2)
             } yield ()
 
-            handleUnit(result.future, StatusCodes.NotFound)
+            handle(result.future, StatusCodes.NotFound)
           }
         }
       }
@@ -64,7 +62,7 @@ class CartHttp(cartService: CartService, productService: ProductService)
       _ <- cartService.removeProduct(UserId.Test, product.id)
     } yield ()
 
-    handleUnit(result.future, StatusCodes.NotFound)
+    handle(result.future, StatusCodes.NotFound)
   }
 }
 

@@ -6,12 +6,13 @@ import com.rtfmarket.services.{ProductServiceImpl, UserServiceImpl}
 import akka.http.scaladsl.server.Directives._
 import com.rtfmarket.slick._
 import com.rtfmarket.slick.Database
-import com.softwaremill.session.{SessionConfig, SessionManager}
+import com.softwaremill.session.{DecodeResult, SessionConfig, SessionEncoder, SessionManager}
 import slick.jdbc.H2Profile.api._
 
 import scala.concurrent.Await
 import scala.io.StdIn
 import scala.concurrent.duration._
+import scala.util.Try
 
 object Main extends App {
 
@@ -21,8 +22,19 @@ object Main extends App {
 
   val db = Database.forConfig("rtfm")
 
+  implicit val encoder = new SessionEncoder[UserId] {
+
+    private val basic = SessionEncoder.basic[Long]
+
+    def encode(t: UserId, nowMillis: Long, config: SessionConfig): String =
+      basic.encode(t.value, nowMillis, config)
+
+    override def decode(s: String, config: SessionConfig): Try[DecodeResult[UserId]] =
+      basic.decode(s, config) map { x => x.copy(t = UserId(x.t))}
+  }
+
   val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
-  implicit val sessionManager: SessionManager[String] = new SessionManager[String](sessionConfig)
+  implicit val sessionManager: SessionManager[UserId] = new SessionManager[UserId](sessionConfig)
 
   val category = CategoryRow(
     id = CategoryId.Test,

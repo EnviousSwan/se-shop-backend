@@ -1,7 +1,5 @@
 package com.rtfmarket.services
 
-import java.security.MessageDigest
-
 import com.evolutiongaming.util.Validation._
 import com.rtfmarket.domain.User
 import com.rtfmarket.slick._
@@ -23,11 +21,11 @@ class UserServiceImpl(db: UserService.Db)
       _ <- db.insertUser(user.toRow).fe
     } yield ()
 
-  def loginUser(email: String, password: String): FV[Unit] = {
+  def loginUser(email: String, password: String): FV[UserId] = {
     for {
       user <- findUser(email)
       _ <- (user.password == password trueOr "Invalid credentials").fe
-    } yield ()
+    } yield user.id
   }
 
   def logoutUser(email: String): FV[Unit] =
@@ -39,10 +37,10 @@ class UserServiceImpl(db: UserService.Db)
   def findUser(email: String): FV[User] =
     db.user(email).fo toRight s"No user found with email $email" map User.apply
 
-  def deleteUser(id: UserId): FV[Unit] =
+  def deleteUser(userId: UserId): FV[Unit] =
     for {
-      _ <- userExists(id).map { _ trueOr s"No user found with id ${ id.value }" }.fe
-      _ <- db.deleteUser(id).fe
+      _ <- userExists(userId).map { _ trueOr s"No user found with id ${ userId.value }" }.fe
+      _ <- db.deleteUser(userId).fe
     } yield ()
 
   def updateUser(user: User): FV[Unit] =
