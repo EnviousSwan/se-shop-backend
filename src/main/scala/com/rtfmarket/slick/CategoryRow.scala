@@ -26,7 +26,5 @@ final class Categories(tag: Tag) extends Table[CategoryRow](tag, "Category") {
 }
 
 object Categories extends TableQuery(new Categories(_)) {
-  lazy val bySlug = Compiled { slug: Rep[String] =>
-    filter(_.slug === slug)
-  }
+  lazy val bySlug = Compiled { slug: Rep[String] => filter(_.slug === slug) }
 }

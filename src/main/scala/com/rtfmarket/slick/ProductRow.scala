@@ -36,4 +36,6 @@ object Products extends TableQuery(new Products(_)) {
   lazy val byCategoryId = Compiled { categoryId: Rep[CategoryId] =>
     filter(_.categoryId === categoryId)
   }
+
+  lazy val byId = Compiled { id: Rep[ProductId] => filter(_.id === id) }
 }

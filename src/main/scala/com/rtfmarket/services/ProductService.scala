@@ -1,8 +1,8 @@
 package com.rtfmarket.services
 
 import com.evolutiongaming.util.Validation.FV
-import com.rtfmarket.domain.Category
-import com.rtfmarket.slick.{ProductDetailsRow, ProductRow}
+import com.rtfmarket.domain.{Category, ProductDetails, Product}
+import com.rtfmarket.slick._
 
 import scala.concurrent.Future
 
@@ -12,7 +12,22 @@ trait ProductService {
 
   def category(slug: String): FV[Category]
 
-  def productDetails(slug: String): FV[ProductDetailsRow]
+  def productDetails(id: ProductId): FV[ProductDetails]
 
-  def product(slug: String): FV[ProductRow]
+  def product(id: ProductId): FV[Product]
+}
+
+object ProductService {
+  trait Db {
+
+    def categories(): Future[Seq[CategoryRow]]
+
+    def category(slug: String): Future[Option[CategoryRow]]
+
+    def productsByCategory(categoryId: CategoryId): Future[Seq[ProductRow]]
+
+    def filtersByCategory(categoryId: CategoryId): Future[Seq[FilterRow]]
+
+    def product(id: ProductId): Future[Option[ProductRow]]
+  }
 }

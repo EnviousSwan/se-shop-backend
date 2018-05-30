@@ -16,4 +16,7 @@ final class ProductPropertyLinks(tag: Tag) extends Table[ProductPropertyLinkRow]
 
 object ProductPropertyLinks extends TableQuery(new ProductPropertyLinks(_)) {
 
+  lazy val byProductId = Compiled { id: Rep[ProductId] => filter(_.productId === id) }
+
+  lazy val byPropertyId = Compiled { id: Rep[PropertyId] => filter(_.propertyId === id) }
 }

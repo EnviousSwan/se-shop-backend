@@ -1,6 +1,5 @@
 package com.rtfmarket.services
 
-import com.evolutiongaming.util.FutureOption
 import com.evolutiongaming.util.Validation._
 import com.rtfmarket.domain._
 import com.rtfmarket.slick._
@@ -9,7 +8,7 @@ import slick.jdbc.H2Profile.api.{Database => _, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ProductServiceImpl(db: ProductServiceImpl.Db)
+class ProductServiceImpl(db: ProductService.Db)
   (implicit executionContext: ExecutionContext) extends ProductService {
 
   override def categories(): Future[Seq[Category]] =
@@ -21,15 +20,15 @@ class ProductServiceImpl(db: ProductServiceImpl.Db)
 
   def category(slug: String): FV[Category] =
     for {
-      row <- db.category(slug) ?>> s"No category found with slug $slug"
+      row <- db.category(slug).fo ?>> s"No category found with slug $slug"
       cat <- categoryFromRow(row).fe
     } yield cat
 
-  def product(slug: String): FV[ProductRow] =
-    ProductRow(ProductId.Test, "name", "title", "description", CategoryId.Test, "media", 100).ok.fe[String]
+  def product(id: ProductId): FV[Product] =
+    (db.product(id).fo map Product.apply) ?>> s"No product found with id $id"
 
-  def productDetails(slug: String): FV[ProductDetailsRow] =
-    ProductDetailsRow("about", "properties").ok.fe[String]
+  def productDetails(productId: ProductId): FV[ProductDetails] =
+    ProductDetails().ok.fe[String]
 
   private def categoryFromRow(row: CategoryRow): Future[Category] =
     for {
@@ -56,18 +55,20 @@ object ProductServiceImpl {
   implicit val ReviewFormatFormat: OFormat[ProductReview] = Json.format[ProductReview]
   implicit val ProductDetailsFormat: OFormat[ProductDetails] = Json.format[ProductDetails]
 
-  class Db(db: Database)(implicit executionContext: ExecutionContext) {
+  class Db(db: Database)(implicit executionContext: ExecutionContext) extends ProductService.Db {
 
     def categories(): Future[Seq[CategoryRow]] = db run Categories.result
 
-    def category(slug: String): FO[CategoryRow] = FutureOption {
+    def category(slug: String): Future[Option[CategoryRow]] =
       db run Categories.bySlug(slug).result.headOption
-    }
 
     def productsByCategory(categoryId: CategoryId): Future[Seq[ProductRow]] =
       db run Products.byCategoryId(categoryId).result
 
     def filtersByCategory(categoryId: CategoryId): Future[Seq[FilterRow]] =
       db run Filters.byCategoryId(categoryId).result
+
+    def product(id: ProductId): Future[Option[ProductRow]] =
+      db run Products.byId(id).result.headOption
   }
 }

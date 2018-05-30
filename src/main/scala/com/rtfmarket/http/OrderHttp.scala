@@ -9,12 +9,9 @@ import com.rtfmarket.slick._
 import IdMatchers._
 import play.api.libs.json.{Json, OFormat}
 import OrderHttp.OrderFormat
-import com.rtfmarket.domain.Order
 import com.softwaremill.session.SessionManager
 
-import scala.collection.immutable
 import scala.concurrent.ExecutionContext
-import scala.util.Success
 
 class OrderHttp(orderService: OrderService)
   (implicit val sessionManager: SessionManager[UserId],
