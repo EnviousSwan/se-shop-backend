@@ -33,7 +33,15 @@ class ProductHttp(productService: ProductService)
       path("category" / Segment) { slug =>
         parameters('sort.?, 'order.?) { (sort, order) =>
           get {
-            handle(productService.category(slug).future, StatusCodes.NotFound)
+            onComplete(productService.category(slug).future) {
+              case Success(Right(category)) =>
+                val sorted = sortedProducts(category.products, sort, order)
+                complete(Just(category.copy(products = sorted)).toResponse)
+              case Success(Left(message)) =>
+                complete(Error(StatusCodes.NotFound, message).toResponse)
+              case _ =>
+                complete(StatusCodes.InternalServerError)
+            }
           }
         }
       } ~
@@ -49,7 +57,7 @@ class ProductHttp(productService: ProductService)
       }
     }
 
-  private def sortedProducts(products: List[Product], sort: Option[String], order: Option[String]) =
+  private def sortedProducts(products: Seq[Product], sort: Option[String], order: Option[String]) =
     products sortWith { (a, b) =>
       sort match {
         case Some("price") =>
