@@ -1,11 +1,15 @@
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.LinkParams
-import akka.http.scaladsl.model.headers.LinkParams.{media, title}
+import akka.http.scaladsl.model.StatusCodes
 import akka.stream.ActorMaterializer
+import akka.http.scaladsl.model.headers.HttpOriginRange
 import com.rtfmarket.http.{MainRoute, ProductHttp, UserHttp}
 import com.rtfmarket.services.{ProductServiceImpl, UserServiceImpl}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler}
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.rtfmarket.slick._
 import com.rtfmarket.slick.Database
 import com.softwaremill.session.{DecodeResult, SessionConfig, SessionEncoder, SessionManager}
@@ -127,7 +131,26 @@ object Main extends App {
   val userService = new UserServiceImpl(userDb)
   val userHttp = new UserHttp(userService)
 
-  val route = MainRoute.route ~ productHttp.route ~ userHttp.route
+
+  val settings = CorsSettings.defaultSettings
+    .withAllowGenericHttpRequests(true)
+    .withAllowCredentials(true)
+    .withAllowedOrigins(HttpOriginRange.*)
+
+  val rejectionHandler = corsRejectionHandler withFallback RejectionHandler.default
+
+  val exceptionHandler = ExceptionHandler {
+    case e: NoSuchElementException => complete(StatusCodes.NotFound -> e.getMessage)
+  }
+
+  val handleErrors = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
+
+  val route =
+    handleRejections(CorsDirectives.corsRejectionHandler) {
+      cors(settings) {
+        MainRoute.route ~ productHttp.route ~ userHttp.route
+    }
+  }
 
   val bindingFuture = Http().bindAndHandle(route, "localhost", 8081)
 

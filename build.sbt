@@ -20,5 +20,6 @@ libraryDependencies ++= Seq(
   "com.evolutiongaming" %% "play-json-tools" % "0.1.1",
   "com.evolutiongaming" %% "akka-http-play-json" % "0.1.10",
   "com.softwaremill.akka-http-session" %% "core" % "0.5.5",
-  "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.5"
+  "com.softwaremill.akka-http-session" %% "jwt"  % "0.5.5",
+  "ch.megard" %% "akka-http-cors" % "0.3.0"
 )
