@@ -7,6 +7,7 @@ import com.rtfmarket.http.{MainRoute, ProductHttp, UserHttp}
 import com.rtfmarket.services.{ProductServiceImpl, UserServiceImpl}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler}
+import ch.megard.akka.http.cors.scaladsl.model.HttpHeaderRange
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
@@ -131,26 +132,7 @@ object Main extends App {
   val userService = new UserServiceImpl(userDb)
   val userHttp = new UserHttp(userService)
 
-
-  val settings = CorsSettings.defaultSettings
-    .withAllowGenericHttpRequests(true)
-    .withAllowCredentials(true)
-    .withAllowedOrigins(HttpOriginRange.*)
-
-  val rejectionHandler = corsRejectionHandler withFallback RejectionHandler.default
-
-  val exceptionHandler = ExceptionHandler {
-    case e: NoSuchElementException => complete(StatusCodes.NotFound -> e.getMessage)
-  }
-
-  val handleErrors = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
-
-  val route =
-    handleRejections(CorsDirectives.corsRejectionHandler) {
-      cors(settings) {
-        MainRoute.route ~ productHttp.route ~ userHttp.route
-    }
-  }
+  val route = MainRoute.route ~ productHttp.route ~ userHttp.route
 
   val bindingFuture = Http().bindAndHandle(route, "localhost", 8081)
 

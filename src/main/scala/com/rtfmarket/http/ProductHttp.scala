@@ -19,42 +19,44 @@ class ProductHttp(productService: ProductService)
     val executionContext: ExecutionContext) extends HttpRoute {
 
   val route: Route =
-    path("categories") {
-      get {
-        onComplete(productService.categories()) {
-          case Success(categories) =>
-            complete(Just(categories).toResponse)
-          case _                          =>
-            complete(StatusCodes.InternalServerError)
-        }
-      }
-    } ~
-    pathPrefix("products") {
-      path("category" / Segment) { slug =>
-        parameters('sort.?, 'order.?) { (sort, order) =>
-          get {
-            onComplete(productService.category(slug).future) {
-              case Success(Right(category)) =>
-                val sorted = sortedProducts(category.products, sort, order)
-                complete(Just(category.copy(products = sorted)).toResponse)
-              case Success(Left(message)) =>
-                complete(Error(StatusCodes.NotFound, message).toResponse)
-              case _ =>
-                complete(StatusCodes.InternalServerError)
-            }
+    corsHandler {
+      path("categories") {
+        get {
+          onComplete(productService.categories()) {
+            case Success(categories) =>
+              complete(Just(categories).toResponse)
+            case _                   =>
+              complete(StatusCodes.InternalServerError)
           }
         }
       } ~
-      path(Id[ProductId] / "details") { id =>
-        get {
-          handle(productService.productDetails(id).future, StatusCodes.NotFound)
+        pathPrefix("products") {
+          path("category" / Segment) { slug =>
+            parameters('sort.?, 'order.?) { (sort, order) =>
+              get {
+                onComplete(productService.category(slug).future) {
+                  case Success(Right(category)) =>
+                    val sorted = sortedProducts(category.products, sort, order)
+                    complete(Just(category.copy(products = sorted)).toResponse)
+                  case Success(Left(message))   =>
+                    complete(Error(StatusCodes.NotFound, message).toResponse)
+                  case _                        =>
+                    complete(StatusCodes.InternalServerError)
+                }
+              }
+            }
+          } ~
+            path(Id[ProductId] / "details") { id =>
+              get {
+                handle(productService.productDetails(id).future, StatusCodes.NotFound)
+              }
+            } ~
+            path(Segment) { slug =>
+              get {
+                handle(productService.product(slug).future, StatusCodes.NotFound)
+              }
+            }
         }
-      } ~
-      path(Segment) { slug =>
-        get {
-          handle(productService.product(slug).future, StatusCodes.NotFound)
-        }
-      }
     }
 
   private def sortedProducts(products: Seq[Product], sort: Option[String], order: Option[String]) =

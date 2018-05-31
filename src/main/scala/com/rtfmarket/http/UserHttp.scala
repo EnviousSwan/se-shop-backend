@@ -28,59 +28,61 @@ class UserHttp(userService: UserService)
   private def setSession(v: UserId): Directive0 = setS(oneOff, usingHeaders, v)
 
   val route: Route =
-    pathPrefix("user") {
-      pathEndOrSingleSlash {
-        (post & entity(as[User])) { request =>
-          handle(userService.createUser(request).future, StatusCodes.BadRequest)
-        } ~
-        (get & withSession) { id =>
-          implicit context =>
-            handleInContext(userService.findUser(id).future, StatusCodes.NotFound)
-        } ~
-        (put & entity(as[User])) { req =>
-          onComplete(userService.userExists(req.email)) {
-            case Success(false) => complete(Error(StatusCodes.NotFound, "No user found with such email").toResponse)
-            case Success(true)  =>
-              withSession { _ =>
-                implicit context =>
-                  handleInContext(userService.updateUser(req).future, StatusCodes.BadRequest)
+    corsHandler {
+      pathPrefix("user") {
+        pathEndOrSingleSlash {
+          (post & entity(as[User])) { request =>
+            handle(userService.createUser(request).future, StatusCodes.BadRequest)
+          } ~
+            (get & withSession) { id =>
+              implicit context =>
+                handleInContext(userService.findUser(id).future, StatusCodes.NotFound)
+            } ~
+            (put & entity(as[User])) { req =>
+              onComplete(userService.userExists(req.email)) {
+                case Success(false) => complete(Error(StatusCodes.NotFound, "No user found with such email").toResponse)
+                case Success(true)  =>
+                  withSession { _ =>
+                    implicit context =>
+                      handleInContext(userService.updateUser(req).future, StatusCodes.BadRequest)
+                  }
+                case _              => complete(StatusCodes.InternalServerError)
               }
-            case _              => complete(StatusCodes.InternalServerError)
-          }
+            } ~
+            (delete & withSession) { userId =>
+              implicit context =>
+                handleInContext(userService.deleteUser(userId).future, StatusCodes.NotFound)
+            }
         } ~
-        (delete & withSession) { userId =>
-          implicit context =>
-            handleInContext(userService.deleteUser(userId).future, StatusCodes.NotFound)
-        }
-      } ~
-      (path("login") & post & entity(as[LoginRequest])) { req =>
-        onComplete(userService.userExists(req.email)) {
-          case Success(false) =>
-            complete(Error(StatusCodes.NotFound, s"No user found with email ${ req.email }").toResponse)
+          (path("login") & post & entity(as[LoginRequest])) { req =>
+            onComplete(userService.userExists(req.email)) {
+              case Success(false) =>
+                complete(Error(StatusCodes.NotFound, s"No user found with email ${ req.email }").toResponse)
 
-          case Success(true) =>
-            onComplete(userService.loginUser(req.email, req.password).future) {
-              case Success(Right(userId)) =>
-                setSession(userId) {
-                  complete(Just(StatusCodes.OK).toResponse)
-                 }
-              case Success(Left(message)) =>
-                complete(Error(StatusCodes.BadRequest, message).toResponse)
-              case _                      =>
+              case Success(true) =>
+                onComplete(userService.loginUser(req.email, req.password).future) {
+                  case Success(Right(userId)) =>
+                    setSession(userId) {
+                      complete(Just(StatusCodes.OK).toResponse)
+                    }
+                  case Success(Left(message)) =>
+                    complete(Error(StatusCodes.BadRequest, message).toResponse)
+                  case _                      =>
+                    complete(StatusCodes.InternalServerError)
+                }
+              case _             =>
                 complete(StatusCodes.InternalServerError)
             }
-          case _             =>
-            complete(StatusCodes.InternalServerError)
-          }
-      } ~
-      path("logout") {
-        get {
-          withSession { id =>
-            invalidateSession { context =>
-              context.complete(StatusCodes.OK)
+          } ~
+          path("logout") {
+            get {
+              withSession { id =>
+                invalidateSession { context =>
+                  context.complete(StatusCodes.OK)
+                }
+              }
             }
           }
-        }
       }
     }
 }

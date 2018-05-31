@@ -13,7 +13,7 @@ import play.api.libs.json.Writes
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
-trait HttpRoute {
+trait HttpRoute extends CorsHandler {
 
   implicit val executionContext: ExecutionContext
   implicit val sessionManager: SessionManager[UserId]
