@@ -38,14 +38,6 @@ object Main extends App {
   val sessionConfig = SessionConfig.default("some_very_long_secret_and_random_string_some_very_long_secret_and_random_string")
   implicit val sessionManager: SessionManager[UserId] = new SessionManager[UserId](sessionConfig)
 
-  val category = CategoryRow(
-    id = CategoryId.Test,
-    name = "clothes",
-    slug = "stuff",
-    title = "amazing",
-    description = "not kidding"
-  )
-
   val user = UserRow(
     id = UserId.Test,
     email = "example@mail.com",
@@ -56,7 +48,12 @@ object Main extends App {
     address = "just around the corner"
   )
 
-  val product = ProductRow(
+  val cat1 = CategoryRow(CategoryId.Test, "clothing", "clothing", "clothing", "Different wearable items of clothing")
+  val cat2 = CategoryRow(CategoryId.Test, "jewelry", "jewelry", "jewelry", "Rings, bracelets and watches")
+
+  val cats = List(cat1, cat2)
+
+  val p1 = ProductRow(
     id = ProductId.Test,
     name = "hoodie",
     title = "Star Wars Hoodie",
@@ -67,14 +64,49 @@ object Main extends App {
     price = 100
   )
 
+  val p2 = ProductRow(
+    id = ProductId.Test,
+    name = "t-shirt",
+    title = "Jusrassic Park T-Shirt",
+    slug = "jp_t_shirt",
+    description = "Hawaiian T-shirt right from the park",
+    categoryId = CategoryId(1),
+    media = "http://i.ebayimg.com/00/s/NTAwWDQ4MA==/z/TJUAAMXQ74JTVk7k/$_3.JPG?set_id=2",
+    price = 10
+  )
+
+  val p3 = ProductRow(
+    id = ProductId.Test,
+    name = "ring",
+    title = "LOTR ring",
+    slug = "lotr_ring",
+    description = "One ring to rule them all",
+    categoryId = CategoryId(2),
+    media = "https://cdn3.volusion.com/sc7ta.cvhr3/v/vspfiles/photos/GLD-LOTR-2.jpg?1513241922",
+    price = 666
+  )
+
+  val p4 = ProductRow(
+    id = ProductId.Test,
+    name = "watch",
+    title = "Harry Potter Time Turner",
+    slug = "hp_watch",
+    description = "Turn the time if you need some",
+    categoryId = CategoryId(2),
+    media = "https://vignette.wikia.nocookie.net/harrypotter/images/a/a4/Time_Turner.png/revision/latest?cb=20161126042527",
+    price = 123
+  )
+
+  val products = List(p1, p2, p3, p4)
+
   val createCategories = Categories.schema.create
   val createProducts = Products.schema.create
   val createFilters = Filters.schema.create
   val createUsers = Users.schema.create
 
-  val insertCategories = Categories += category
   val insertUsers = Users += user
-  val insertProducts = Products += product
+  val insertCategories = Categories ++= cats
+  val insertProducts = Products ++= products
 
   val future = db run (
     createCategories andThen
